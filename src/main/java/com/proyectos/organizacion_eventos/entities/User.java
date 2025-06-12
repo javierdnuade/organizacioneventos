@@ -11,6 +11,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
@@ -27,14 +28,16 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    @Column(unique = true)
+    @Column(unique = true, nullable = false)
     private String username;
 
+    @Column(nullable = false)
     private String password;
 
+    @Column(nullable = false)
     private String name;
 
-    @Column(unique = true)
+    @Column(unique = true, nullable = false)
     private String email;
 
     @ManyToMany
@@ -50,6 +53,9 @@ public class User {
 
     //Relación de OneToMany - Un usuario puede organizar muchos eventos
     private List<Event> eventsOrganizer;
+
+    @OneToMany(mappedBy = "user")
+    private List<GroupUser> groups;
 
     public User () {
         this.eventsAttendance = new ArrayList<>();
