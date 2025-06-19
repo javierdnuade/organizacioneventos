@@ -9,11 +9,11 @@ import lombok.NoArgsConstructor;
 
 @NoArgsConstructor
 @AllArgsConstructor
-@Data
 @Embeddable
-public class GroupUserId implements Serializable {
+@Data
+public class EventUserId implements Serializable {
 
-    private int groupId;
+    private int eventId;
     private int userId;
 
 }

@@ -3,6 +3,7 @@ package com.proyectos.organizacion_eventos.entities;
 import java.util.ArrayList;
 import java.util.List;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -39,7 +40,7 @@ public class User {
 
     @Column(unique = true, nullable = false)
     private String email;
-
+    
     @ManyToMany
     @JoinTable(
         name = "users_roles",
@@ -49,9 +50,11 @@ public class User {
     private List<Role> roles;
 
     //Relacion de ManyToMany - Muchos usuarios pueden estar en Muchos eventos
-    private List<Event> eventsAttendance;
+    private List<EventAttendance> eventsAttendance;
 
     //Relación de OneToMany - Un usuario puede organizar muchos eventos
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "organizer_id")
     private List<Event> eventsOrganizer;
 
     @OneToMany(mappedBy = "user")
