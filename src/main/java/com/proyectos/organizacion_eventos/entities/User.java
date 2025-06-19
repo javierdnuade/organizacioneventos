@@ -3,6 +3,8 @@ package com.proyectos.organizacion_eventos.entities;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -14,9 +16,11 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import jakarta.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+
 
 @Entity
 @Table(name = "users")
@@ -49,7 +53,8 @@ public class User {
         uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "role_id"}))
     private List<Role> roles;
 
-    //Relacion de ManyToMany - Muchos usuarios pueden estar en Muchos eventos
+    //Relacion de ManyToMany (pero con tabla intermedia) - Muchos usuarios pueden estar en Muchos eventos
+    @OneToMany(mappedBy = "user")
     private List<EventAttendance> eventsAttendance;
 
     //Relación de OneToMany - Un usuario puede organizar muchos eventos
@@ -57,12 +62,25 @@ public class User {
     @JoinColumn(name = "organizer_id")
     private List<Event> eventsOrganizer;
 
+    //Relacion de ManyToMany pero con tabla intermedia enriquecida - Muchos usuarios pueden estar en Muchos grupos
     @OneToMany(mappedBy = "user")
     private List<GroupUser> groups;
+
+    //Relacion de ManyToMany (pero con tabla intermedia) - Muchos usuarios pueden tener muchos feedbacks
+    @OneToMany(mappedBy = "user")
+    private List<FeedbackEvent> feedbacks;
+
+    // No es un campo de la BD, es una bandera para cuando se crea el usuario, se asigna si es admin o no
+    @Transient // Transient es para que no se persista
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    private boolean admin;    
 
     public User () {
         this.eventsAttendance = new ArrayList<>();
         this.eventsOrganizer = new ArrayList<>();
+        this.groups = new ArrayList<>();
+        this.roles = new ArrayList<>();
+        this.feedbacks = new ArrayList<>();
     }
 
 }

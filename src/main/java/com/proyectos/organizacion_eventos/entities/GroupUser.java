@@ -11,10 +11,11 @@ import jakarta.persistence.MapsId;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+
+
+// Clase intermedia para los grupos y usuarios
 
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
 @Entity
 @Table(name = "group_user")
@@ -35,4 +36,8 @@ public class GroupUser {
 
     @Column(name = "is_leader", nullable = false)
     private boolean isLeader;
+
+    public GroupUser() {
+        this.isLeader = false; // Por defecto, un usuario no es lider
+    }
 }

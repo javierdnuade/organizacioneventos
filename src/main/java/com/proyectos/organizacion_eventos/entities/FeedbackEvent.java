@@ -11,12 +11,11 @@ import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
-// Clase intermedia para la relacion de usuarios y eventos
 @Entity
-@Table(name = "event_attendance")
+@Table(name = "event_feedback")
 @AllArgsConstructor
 @Data
-public class EventAttendance {
+public class FeedbackEvent {
 
     @EmbeddedId
     private EventUserId id;
@@ -31,10 +30,9 @@ public class EventAttendance {
     @JoinColumn(name = "user_id")
     private User user;
 
-    private boolean attended;
+    private String feeedback;
 
-    public EventAttendance () {
-        this.attended = false;
+    public FeedbackEvent() {
+        this.feeedback = "";
     }
-
 }

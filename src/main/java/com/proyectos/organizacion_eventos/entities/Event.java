@@ -1,8 +1,10 @@
 package com.proyectos.organizacion_eventos.entities;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Set;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -10,6 +12,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
@@ -27,6 +31,9 @@ public class Event {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
+    @Column(nullable = false)
+    private String name;
+
     @JoinColumn(name = "organizer_id", nullable = false)
     private User organizer;
 
@@ -36,6 +43,9 @@ public class Event {
     
     private String location;
 
+    // Muchos eventos pueden tener un estado, y un estado puede estar en muchos eventos
+    @ManyToOne
+    @JoinColumn(name = "status_id", nullable = false)
     private Status status;
 
     @ManyToMany
@@ -46,9 +56,9 @@ public class Event {
         uniqueConstraints = @UniqueConstraint(columnNames = {"event_id", "group_id"}))
     private Set<Group> groups;
 
+    @OneToMany(mappedBy = "event")
+    private List<FeedbackEvent> feedbacks;
     
-
-
-
-
+    @OneToMany(mappedBy = "event")
+    private List<EventAttendance> attendance;
 }

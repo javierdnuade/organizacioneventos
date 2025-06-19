@@ -22,7 +22,7 @@ public class Role {
     private String name;
 
     // Direcion ManyToMany con tabla intermedia "users_roles", ya que un usuario puede tener muchos roles, y muchos roles 1 usuario
-    @ManyToMany
+    @ManyToMany(mappedBy = "roles")
     private List<User> users;
     
     public Role () {
