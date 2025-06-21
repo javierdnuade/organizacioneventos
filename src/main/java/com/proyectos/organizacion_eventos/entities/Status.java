@@ -19,4 +19,9 @@ public class Status {
 
     private String description;
 
+    public String getName() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getName'");
+    }
+
 }
