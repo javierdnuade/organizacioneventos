@@ -3,6 +3,7 @@ package com.proyectos.organizacion_eventos.services;
 import java.util.List;
 import java.util.Optional;
 
+import com.proyectos.organizacion_eventos.dto.UserDTO;
 import com.proyectos.organizacion_eventos.entities.User;
 
 public interface UserService {
@@ -15,8 +16,14 @@ public interface UserService {
 
     Optional<User> findByUsername(String username);
 
-    List<User> findAll();
+    List<UserDTO> findAll();
 
     User save(User user);
+
+    Optional<User> getUserEntityById(int id);
+
+    Optional<UserDTO> findByIdDTO(int id);
+
+    Optional<User> deleteById(int id);
 
 }

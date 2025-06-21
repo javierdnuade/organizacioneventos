@@ -18,6 +18,7 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import jakarta.persistence.UniqueConstraint;
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -33,15 +34,19 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
+    @NotBlank(message = "El username es obligatorio")
     @Column(unique = true, nullable = false)
     private String username;
 
+    @NotBlank(message = "La contraseña es obligatoria")
     @Column(nullable = false)
     private String password;
 
+    @NotBlank(message = "El nombre es obligatorio")
     @Column(nullable = false)
     private String name;
 
+    @NotBlank(message = "El email es obligatorio")
     @Column(unique = true, nullable = false)
     private String email;
     

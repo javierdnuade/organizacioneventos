@@ -9,6 +9,5 @@ import com.proyectos.organizacion_eventos.entities.Event;
 public interface EventRepository extends CrudRepository<Event, Integer> {
 
     // Falta crear la logica en el Service para que se pueda usar este metodo
-    List<Event> findByStatus(int statudId);
-
+    List<Event> findByStatusId(int statusId);
 }

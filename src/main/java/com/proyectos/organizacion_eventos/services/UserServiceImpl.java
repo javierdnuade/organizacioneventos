@@ -9,6 +9,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.proyectos.organizacion_eventos.dto.UserDTO;
 import com.proyectos.organizacion_eventos.entities.Role;
 import com.proyectos.organizacion_eventos.entities.User;
 import com.proyectos.organizacion_eventos.repositories.RoleRepository;
@@ -51,13 +52,39 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<User> findAll() {
-        return (List<User>) repository.findAll();
+    public List<UserDTO> findAll() {
+
+        List<User> users = (List<User>) repository.findAll();
+
+        // Convertimos la lista de usuarios a una lista de UserDTO
+        // Usamos stream para mapear cada User a UserDTO
+        List<UserDTO> userDTOs = users.stream()
+            .map(user -> UserDTO.builder()
+            .id(user.getId())
+            .username(user.getUsername())
+            .name(user.getName())
+            .email(user.getEmail())
+            .roles(user.getRoles().stream()
+                .map(Role::getName)
+                .toList())
+            .build())        
+        .toList();
+
+        // Retornamos la lista de UserDTO
+        return userDTOs;
     }
 
     @Transactional
     @Override
     public User save(User user) {
+
+        if (repository.existsByUsername(user.getUsername())) {
+            throw new IllegalArgumentException("El nombre de usuario ya está en uso");
+        }
+
+        if (repository.existsByEmail(user.getEmail())) {
+            throw new IllegalArgumentException("El email ya está en uso");
+        }
 
         // Creamos la lista de roles que vendra con el usuario
         List<Role> roles = new ArrayList<>();
@@ -78,4 +105,38 @@ public class UserServiceImpl implements UserService {
 
         return repository.save(user); // Guardamos el usuario en la base de datos
     }
+
+
+    // Metodo para obtener un User sin DTO por ID, usamos el repository
+    @Transactional(readOnly = true)
+    @Override
+    public Optional<User> getUserEntityById(int id) {
+        return repository.findById(id);
+    }
+
+    @Override
+    public Optional<User> deleteById(int id) {
+        Optional<User> userOptional = repository.findById(id);
+        userOptional.ifPresent(user -> {
+            repository.delete(user);
+        });
+        return userOptional;
+    }
+
+
+    // Metodo para obtener uun UserDTO por ID, usamos el service
+    @Transactional(readOnly = true)
+    @Override
+    public Optional<UserDTO> findByIdDTO(int id) {     
+        return repository.findById(id)
+        .map(user -> UserDTO.builder()
+            .id(user.getId())
+            .username(user.getUsername())
+            .name(user.getName())
+            .email(user.getEmail())
+            .roles(user.getRoles().stream()
+                .map(Role::getName)
+                .toList())
+            .build());
+        }
 }
