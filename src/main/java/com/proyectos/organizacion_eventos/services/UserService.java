@@ -20,7 +20,7 @@ public interface UserService {
 
     User save(User user);
 
-    Optional<User> getUserEntityById(int id);
+    Optional<User> findById(int id);
 
     Optional<UserDTO> findByIdDTO(int id);
 

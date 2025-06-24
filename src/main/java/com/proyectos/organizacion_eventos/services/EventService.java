@@ -18,7 +18,7 @@ public interface EventService {
 
     Optional<Event> findById(int id);
 
-    List<EventDTO> findByStatusId(int statusId);
+    List<EventDTO> findByStatus(String status);
 
     Optional<Event> delete(int id);
 }

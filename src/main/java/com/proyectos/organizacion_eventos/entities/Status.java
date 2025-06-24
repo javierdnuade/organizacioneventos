@@ -18,10 +18,4 @@ public class Status {
     private int id;
 
     private String description;
-
-    public String getName() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getName'");
-    }
-
 }

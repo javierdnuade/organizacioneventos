@@ -3,6 +3,7 @@ package com.proyectos.organizacion_eventos.services;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.StreamSupport;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -58,7 +59,7 @@ public class UserServiceImpl implements UserService {
 
         // Convertimos la lista de usuarios a una lista de UserDTO
         // Usamos stream para mapear cada User a UserDTO
-        List<UserDTO> userDTOs = users.stream()
+        List<UserDTO> userDTOs = StreamSupport.stream(users.spliterator(), false)
             .map(user -> UserDTO.builder()
             .id(user.getId())
             .username(user.getUsername())
@@ -110,7 +111,7 @@ public class UserServiceImpl implements UserService {
     // Metodo para obtener un User sin DTO por ID, usamos el repository
     @Transactional(readOnly = true)
     @Override
-    public Optional<User> getUserEntityById(int id) {
+    public Optional<User> findById(int id) {
         return repository.findById(id);
     }
 
@@ -124,13 +125,12 @@ public class UserServiceImpl implements UserService {
     }
 
 
-    // Metodo para obtener uun UserDTO por ID, usamos el service
+    // Metodo para obtener un UserDTO por ID, usamos el service
     @Transactional(readOnly = true)
     @Override
     public Optional<UserDTO> findByIdDTO(int id) {     
         return repository.findById(id)
         .map(user -> UserDTO.builder()
-            .id(user.getId())
             .username(user.getUsername())
             .name(user.getName())
             .email(user.getEmail())

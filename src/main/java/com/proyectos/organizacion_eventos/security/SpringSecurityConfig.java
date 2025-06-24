@@ -21,7 +21,7 @@ public class SpringSecurityConfig {
             .csrf(csrf -> csrf.disable()) // Deshabilita CSRF (Cross-Site Request Forgery) para simplificar la configuración
             .cors(cors -> cors.disable()) // Deshabilita CORS (Cross-Origin Resource Sharing) para simplificar la configuración
             .authorizeHttpRequests(auth -> auth // Configura las reglas de autorización
-                .anyRequest().permitAll() // Permite TODO sin autenticación
+                .anyRequest().permitAll()
             );
         return http.build(); 
     }

@@ -16,6 +16,8 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -31,9 +33,11 @@ public class Event {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
+    @NotBlank(message = "El nombre del evento es obligatorio")
     @Column(nullable = false)
     private String name;
 
+    @NotNull(message = "El organizador del evento es obligatorio")
     @ManyToOne
     @JoinColumn(name = "organizer_id", nullable = false)
     private User organizer;
@@ -45,6 +49,7 @@ public class Event {
     private String location;
 
     // Muchos eventos pueden tener un estado, y un estado puede estar en muchos eventos
+    @NotNull(message = "El status no debe ser nulo")
     @ManyToOne
     @JoinColumn(name = "status_id", nullable = false)
     private Status status;

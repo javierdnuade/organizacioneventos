@@ -1,6 +1,5 @@
 package com.proyectos.organizacion_eventos.controllers;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -19,6 +18,7 @@ import com.proyectos.organizacion_eventos.dto.UserDTO;
 import com.proyectos.organizacion_eventos.entities.Role;
 import com.proyectos.organizacion_eventos.entities.User;
 import com.proyectos.organizacion_eventos.services.UserService;
+import com.proyectos.organizacion_eventos.utils.ControllerUtils;
 
 import jakarta.validation.Valid;
 
@@ -62,13 +62,19 @@ public class UserController {
     public ResponseEntity<?> craete(@Valid @RequestBody User user, BindingResult result) {
         
         // Agregamos validación en errores en campos
+        ResponseEntity<?> errors = ControllerUtils.getErrorsResponse(result);
+        if (errors != null) {
+            return errors;
+        }
+
+        /* Anterior forma, sin la clase de Utils creada
         if (result.hasFieldErrors()) {
             Map<String, String> errors = new HashMap<>();
             result.getFieldErrors().forEach(err -> {
                 errors.put(err.getField(), err.getDefaultMessage());
             });
             return ResponseEntity.badRequest().body(errors);
-        }
+        } */
 
         try {
             User created = service.save(user);
@@ -88,7 +94,7 @@ public class UserController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteUser(@PathVariable int id) {
-        Optional<User> userDelete = service.getUserEntityById(id);
+        Optional<User> userDelete = service.findById(id);
         if (userDelete.isPresent()) {
             User deleted = userDelete.get();
             UserDTO dto = UserDTO.builder()
