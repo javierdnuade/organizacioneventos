@@ -2,6 +2,7 @@ package com.proyectos.organizacion_eventos.controllers;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -17,6 +18,7 @@ import com.proyectos.organizacion_eventos.utils.ControllerUtils;
 
 import jakarta.validation.Valid;
 
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -31,8 +33,6 @@ public class EventController {
 
     @Autowired
     private EventService service;
-
-
 
     @GetMapping
     public ResponseEntity<List<EventDTO>> list() {
@@ -85,5 +85,25 @@ public class EventController {
             return ResponseEntity.noContent().build();
         }
         return ResponseEntity.ok(events);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteEvent (@PathVariable int id) {
+        Optional<Event> eventOptional = service.findById(id);
+        if (eventOptional.isPresent()) {
+            Event event = eventOptional.get();
+            EventDTO eventDTO = EventDTO.builder()
+                .id(event.getId())
+                .name(event.getName())
+                .description(event.getDescription())
+                .date(event.getDate())
+                .location(event.getLocation())
+                .status(event.getStatus().getDescription())
+                .organizer(event.getOrganizer().getName())
+            .build();
+            service.delete(id);
+            return ResponseEntity.ok(eventDTO);
+        }
+        return ResponseEntity.notFound().build();
     }
 }

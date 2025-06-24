@@ -12,8 +12,6 @@ public interface EventService {
 
     Event save(Event event);
 
-    Optional<Event> deleteById(int id);
-
     Optional<EventDTO> getEventDTO(int id);
 
     Optional<Event> findById(int id);

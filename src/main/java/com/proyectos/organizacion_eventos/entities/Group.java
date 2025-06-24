@@ -37,5 +37,4 @@ public class Group {
         this.events = new HashSet<>();
         this.members = new HashSet<>();
     }
-
 }

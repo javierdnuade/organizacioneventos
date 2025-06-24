@@ -63,15 +63,6 @@ public class EventServiceImpl implements EventService{
         return repository.save(event);
     }
 
-    @Override
-    public Optional<Event> deleteById(int id) {
-        Optional<Event> eventOptional = repository.findById(id);
-        eventOptional.ifPresent(event -> {
-            repository.delete(event);
-        });
-        return eventOptional;
-    }
-
     @Transactional(readOnly = true)
     @Override
     public Optional<EventDTO> getEventDTO(int id) {
