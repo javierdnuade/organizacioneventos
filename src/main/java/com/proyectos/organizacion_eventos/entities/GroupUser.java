@@ -18,7 +18,7 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 @Entity
-@Table(name = "group_user")
+@Table(name = "group_users")
 public class GroupUser {
 
     @EmbeddedId

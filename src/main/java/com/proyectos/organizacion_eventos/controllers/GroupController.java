@@ -105,8 +105,8 @@ public class GroupController {
         // Manejamos errores por si no existe uno o otro
         
         try {
-            service.addMember(groupId, userId, isLeader);
 
+            // Revisamos rol del que maneja la solicitud
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
             String currentUsername = auth.getName();
 
@@ -122,6 +122,8 @@ public class GroupController {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(Map.of("error", "Solo un lider o admin pueden agregar miembros"));
             }
+
+            service.addMember(groupId, userId, isLeader);
 
             String groupName = service.findById(groupId).map(Group::getName).orElse("desconocido");
             String userName = userService.findById(userId).map(User::getName).orElse("desconocido");
@@ -157,6 +159,28 @@ public class GroupController {
             ));
         }
         return ResponseEntity.notFound().build();
-
     }
+
+    @PostMapping("/{groupId}/members/{userId}/setLeader")
+    public ResponseEntity<?> setLeader(
+            @PathVariable int groupId,
+            @PathVariable int userId,
+            @RequestParam boolean isLeader) {
+
+        try {
+            service.modifyLeader(groupId, userId, isLeader);
+            return ResponseEntity.ok(Map.of(
+                "mensaje", "El usuario fue " + (isLeader ? "asignado como lider" : "removido como lider")));
+        } catch (RuntimeException e) 
+        {
+            if (e.getMessage().contains("no encontrado") || e.getMessage().contains("no es miembro")) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+            }
+            if (e.getMessage().contains("ya es lider")) {
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", e.getMessage()));
+            }
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", e.getMessage()));
+        }
+    }
+
 }

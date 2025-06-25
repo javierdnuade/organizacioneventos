@@ -15,7 +15,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 
 @Entity
-@Table(name = "groups")
+@Table(name = "groupapp")
 @Data
 @AllArgsConstructor
 public class Group {

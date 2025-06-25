@@ -113,4 +113,27 @@ public class GroupServiceImpl implements GroupService {
             .map(GroupUser::isLeader)
             .orElse(false);    
     }
+
+    @Override
+    public void modifyLeader(int groupId, int userId, boolean leader) {
+        // Verifica si existe el grupo
+        if (repository.findById(groupId).isEmpty()) {
+            throw new RuntimeException("Grupo no encontrado");
+        }
+        // Verifica si existe el usuario
+        if (userRepository.findById(userId).isEmpty()) {
+            throw new RuntimeException("Usuario no encontrado");
+        }
+
+        // Verificamos si el usuario es miembro del grupo.
+
+        GroupUserId groupUserId = new GroupUserId(groupId, userId);
+        GroupUser groupUser = groupUserRepository.findById(groupUserId)
+            .orElseThrow( () -> new RuntimeException("El usuario no es miembro del grupo"));
+
+        groupUser.setLeader(leader);
+        groupUserRepository.save(groupUser);
+    }
+
+    
 }
