@@ -22,4 +22,6 @@ public interface GroupService {
     void addMember(int grupoId, int userId, boolean isLeader);
 
     Optional<GroupUser> removeMember(int groupId, int userId);
+
+    boolean isLeader(int groupId, String username);
 }

@@ -100,5 +100,17 @@ public class GroupServiceImpl implements GroupService {
         });
 
         return groupUserOptional;
-    }    
+    }
+
+    @Override
+    public boolean isLeader(int groupId, String username) {
+        Optional<User> userOpt = userRepository.findByUsername(username);
+        if (userOpt.isEmpty()) {
+            return false;
+        }
+        GroupUserId groupUserId = new GroupUserId(groupId, userOpt.get().getId());
+        return groupUserRepository.findById(groupUserId)
+            .map(GroupUser::isLeader)
+            .orElse(false);    
+    }
 }
