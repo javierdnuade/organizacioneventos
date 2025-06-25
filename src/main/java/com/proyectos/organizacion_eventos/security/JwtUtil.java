@@ -5,8 +5,6 @@ import org.springframework.stereotype.Component;
 
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.security.Keys;
 
 import java.util.Date;
 
@@ -17,13 +15,14 @@ import javax.crypto.SecretKey;
 @Component
 public class JwtUtil {
 
-    private final SecretKey Secret_Key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
+    private final SecretKey Secret_Key = Jwts.SIG.HS256.key().build();
+    
 
     public String createToken(String username) {
         String token = Jwts.builder()
-            .setSubject(username)
-            .setIssuedAt(new Date())
-            .setExpiration(new Date(System.currentTimeMillis() + 86400000)) // Desde el momento actual, hasta 1 dia
+            .subject(username)
+            .issuedAt(new Date())
+            .expiration(new Date(System.currentTimeMillis() + 86400000)) // Desde el momento actual, hasta 1 dia
             .signWith(Secret_Key)
             .compact();
 
@@ -32,19 +31,19 @@ public class JwtUtil {
 
     public String extractUsername(String token) {
         return Jwts.parser()
-            .setSigningKey(Secret_Key)
+            .verifyWith(Secret_Key)
             .build()
-            .parseClaimsJws(token)
-            .getBody()
+            .parseSignedClaims(token)
+            .getPayload()
             .getSubject();
     }
 
 
     public boolean validateToken(String token) {
         try {
-            Jwts.parser().setSigningKey(Secret_Key)
+            Jwts.parser().verifyWith(Secret_Key)
                 .build()
-                .parseClaimsJws(token);
+                .parseSignedClaims(token);
                 return true;
         } catch (JwtException | IllegalArgumentException e) {
             return false;
