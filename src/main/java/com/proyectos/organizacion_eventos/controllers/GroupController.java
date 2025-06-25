@@ -1,5 +1,6 @@
 package com.proyectos.organizacion_eventos.controllers;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -9,11 +10,15 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.proyectos.organizacion_eventos.dto.GroupDTO;
 import com.proyectos.organizacion_eventos.entities.Group;
+import com.proyectos.organizacion_eventos.entities.GroupUser;
+import com.proyectos.organizacion_eventos.entities.User;
 import com.proyectos.organizacion_eventos.services.GroupService;
+import com.proyectos.organizacion_eventos.services.UserService;
 import com.proyectos.organizacion_eventos.utils.ControllerUtils;
 
 import jakarta.validation.Valid;
@@ -28,6 +33,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 @RestController
 @RequestMapping("/api/groups")
 public class GroupController {
+
+    @Autowired
+    private UserService userService;
 
     @Autowired
     private GroupService service;
@@ -62,6 +70,7 @@ public class GroupController {
             GroupDTO dto = GroupDTO.builder()
                 .id(created.getId())
                 .name(created.getName())
+                .members(Collections.emptyList())
             .build();
             return ResponseEntity.status(HttpStatus.CREATED).body(dto);
         } catch (IllegalArgumentException e) {
@@ -84,4 +93,52 @@ public class GroupController {
         return ResponseEntity.notFound().build();
     }
 
+    @PostMapping("/{groupId}/members/{userId}")
+    public ResponseEntity<?> addMember(
+            @PathVariable int groupId,
+            @PathVariable int userId,
+            // Seteamos por defecto que sea false si no viene en la URL el parametro del si es lider
+            @RequestParam(defaultValue = "false") boolean isLeader) {
+
+        // Manejamos errores por si no existe uno o otro
+
+        try {
+            service.addMember(groupId, userId, isLeader);
+
+            String groupName = service.findById(groupId).map(Group::getName).orElse("desconocido");
+            String userName = userService.findById(userId).map(User::getName).orElse("desconocido");
+
+            return ResponseEntity.ok(Map.of(
+                "usuario", userName,
+                "grupo", groupName
+            ));
+        } catch (RuntimeException e) {
+            // Manejamos los errores que se tiran desde el Service
+
+            if (e.getMessage().contains("Grupo no encontrado") || e.getMessage().contains("Usuario no encontrado")) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+            }
+            if (e.getMessage().contains("ya es miembro")) {
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", e.getMessage()));
+            }
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", e.getMessage()));
+        }   
+    }
+
+    @DeleteMapping("/{groupId}/members/{userId}")
+    public ResponseEntity<?> deleteMember (
+            @PathVariable int groupId,
+            @PathVariable int userId) {
+
+        Optional<GroupUser> groupUserOpt = service.removeMember(groupId, userId);
+        if (groupUserOpt.isPresent()) {
+            String userName = groupUserOpt.get().getUser().getName();
+            String groupName = groupUserOpt.get().getGroup().getName();
+            return ResponseEntity.ok(Map.of(
+            "mensaje", "El usuario " + userName + " fue eliminado del grupo " + groupName
+            ));
+        }
+        return ResponseEntity.notFound().build();
+
+    }
 }

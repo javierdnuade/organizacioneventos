@@ -17,8 +17,6 @@ import com.proyectos.organizacion_eventos.entities.User;
 import com.proyectos.organizacion_eventos.services.UserService;
 
 
-
-
 @RestController
 @RequestMapping("/api/users")
 public class UserController {

@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import com.proyectos.organizacion_eventos.dto.GroupDTO;
 import com.proyectos.organizacion_eventos.entities.Group;
+import com.proyectos.organizacion_eventos.entities.GroupUser;
 
 public interface GroupService {
 
@@ -18,4 +19,7 @@ public interface GroupService {
 
     Optional<Group> delete(int id);
 
+    void addMember(int grupoId, int userId, boolean isLeader);
+
+    Optional<GroupUser> removeMember(int groupId, int userId);
 }

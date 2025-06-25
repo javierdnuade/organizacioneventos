@@ -9,10 +9,21 @@ import org.springframework.stereotype.Service;
 
 import com.proyectos.organizacion_eventos.dto.GroupDTO;
 import com.proyectos.organizacion_eventos.entities.Group;
+import com.proyectos.organizacion_eventos.entities.GroupUser;
+import com.proyectos.organizacion_eventos.entities.User;
+import com.proyectos.organizacion_eventos.entities.embeddable.GroupUserId;
 import com.proyectos.organizacion_eventos.repositories.GroupRepository;
+import com.proyectos.organizacion_eventos.repositories.GroupUserRepository;
+import com.proyectos.organizacion_eventos.repositories.UserRepository;
 
 @Service
 public class GroupServiceImpl implements GroupService {
+
+    @Autowired
+    private GroupUserRepository groupUserRepository;
+
+    @Autowired
+    private UserRepository userRepository;
 
     @Autowired
     private GroupRepository repository;
@@ -59,5 +70,35 @@ public class GroupServiceImpl implements GroupService {
             repository.delete(group);
         });
         return groupOptional;
+    }
+
+    @Override
+    public void addMember(int grupoId, int userId, boolean isLeader) {
+        Group group = repository.findById(grupoId)
+            .orElseThrow(() -> new RuntimeException("Grupo no encontrado"));
+
+        User user = userRepository.findById(userId)
+            .orElseThrow( () -> new RuntimeException("Usuario no encontrado"));
+
+        GroupUserId groupUserId = new GroupUserId(grupoId, userId);
+
+        // Evitamos duplicados en la logica de negocio
+        if (groupUserRepository.existsById(groupUserId)) {
+            throw new RuntimeException("El usuario ya es miembro del grupo");
+        }
+
+        GroupUser groupUser = new GroupUser(groupUserId, group, user, isLeader);
+        groupUserRepository.save(groupUser);
+    }
+
+    @Override
+    public Optional<GroupUser> removeMember(int groupId, int userId) {
+        GroupUserId groupUserId = new GroupUserId(groupId, userId);
+        Optional<GroupUser> groupUserOptional = groupUserRepository.findById(groupUserId);
+        groupUserOptional.ifPresent(groupUser -> {
+            groupUserRepository.delete(groupUser);
+        });
+
+        return groupUserOptional;
     }    
 }
