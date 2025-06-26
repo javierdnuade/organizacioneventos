@@ -68,6 +68,7 @@ public class EventServiceImpl implements EventService{
     public Optional<EventDTO> getEventDTO(int id) {
         return repository.findById(id)
             .map(event -> EventDTO.builder()
+                .id(event.getId())
                 .name(event.getName())
                 .description(event.getDescription())
                 .date(event.getDate())

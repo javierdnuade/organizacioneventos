@@ -1,7 +1,5 @@
 package com.proyectos.organizacion_eventos.dto;
 
-import java.util.List;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -11,16 +9,11 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class GroupDTO {
+public class GroupMemberDTO {
 
     private int id;
     private String name;
-    private List<MemberDTO> members;
+    private String memberName;
+    private boolean isLeader;
 
-    @Data
-    @Builder
-    public static class MemberDTO {
-        private String name;
-        private boolean isLeader;
-    }
 }

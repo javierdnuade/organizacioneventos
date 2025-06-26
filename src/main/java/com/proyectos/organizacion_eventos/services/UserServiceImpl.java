@@ -1,8 +1,9 @@
 package com.proyectos.organizacion_eventos.services;
 
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.StreamSupport;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -88,7 +89,7 @@ public class UserServiceImpl implements UserService {
         }
 
         // Creamos la lista de roles que vendra con el usuario
-        List<Role> roles = new ArrayList<>();
+        Set<Role> roles = new HashSet<>();
 
         Optional<Role> roleOptionalUser = roleRepository.findByName("ROLE_USER");
         roleOptionalUser.ifPresent(roles::add); // Agregamos el rol de usuario por defecto
@@ -124,13 +125,13 @@ public class UserServiceImpl implements UserService {
         return userOptional;
     }
 
-
     // Metodo para obtener un UserDTO por ID, usamos el service
     @Transactional(readOnly = true)
     @Override
     public Optional<UserDTO> findByIdDTO(int id) {     
         return repository.findById(id)
         .map(user -> UserDTO.builder()
+            .id(user.getId())
             .username(user.getUsername())
             .name(user.getName())
             .email(user.getEmail())

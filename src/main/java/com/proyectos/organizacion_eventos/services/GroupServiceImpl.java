@@ -1,23 +1,33 @@
 package com.proyectos.organizacion_eventos.services;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.proyectos.organizacion_eventos.dto.GroupDTO;
+import com.proyectos.organizacion_eventos.dto.GroupMemberDTO;
+import com.proyectos.organizacion_eventos.entities.Event;
 import com.proyectos.organizacion_eventos.entities.Group;
 import com.proyectos.organizacion_eventos.entities.GroupUser;
 import com.proyectos.organizacion_eventos.entities.User;
 import com.proyectos.organizacion_eventos.entities.embeddable.GroupUserId;
+import com.proyectos.organizacion_eventos.repositories.EventRepository;
 import com.proyectos.organizacion_eventos.repositories.GroupRepository;
 import com.proyectos.organizacion_eventos.repositories.GroupUserRepository;
 import com.proyectos.organizacion_eventos.repositories.UserRepository;
 
+
 @Service
 public class GroupServiceImpl implements GroupService {
+
+    @Autowired
+    private EventRepository eventRepository;
 
     @Autowired
     private GroupUserRepository groupUserRepository;
@@ -29,20 +39,52 @@ public class GroupServiceImpl implements GroupService {
     private GroupRepository repository;
 
     @Override
+    @Transactional(readOnly = true)
     public List<GroupDTO> findAll() {
-        List<Group> groups = (List<Group>) repository.findAll();
-        return groups.stream().map(group -> GroupDTO.builder() // Creamos el GroupDTO por cada grupo existente
-            .id(group.getId())
-            .name(group.getName())
-            .members(   // Creamos la lsita de miembros mediante la clase estatica dentro de GroupDTO
-                group.getMembers().stream().map(mmb -> GroupDTO.MemberDTO.builder()
-                    .name(mmb.getUser().getName())
-                    .isLeader(mmb.isLeader())
-                    .build()) // Build del miembro dentro del grupo
-                .collect(Collectors.toList())) // Convertimos el stream de miembros a una lista para pasarla a la entidad DTO
-            .build()) // CConstruimos el GroupDTO completo
-        .collect(Collectors.toList()); // Reunimos todos los GroupDTO del stream en una lista
+         List<GroupMemberDTO> list = repository.fetchGroupMembers();
+
+        Map<Integer, GroupDTO> groupMap = new HashMap<>();
+
+        for (GroupMemberDTO row : list) {
+            groupMap.computeIfAbsent(row.getId(), id ->
+                GroupDTO.builder()
+                    .id(id)
+                    .name(row.getName())
+                    .members(new ArrayList<>())
+                    .build());
+                groupMap.get(row.getId())
+                    .getMembers()
+                    .add(GroupDTO.MemberDTO.builder()
+                        .name(row.getMemberName())
+                        .isLeader(row.isLeader())
+                        .build());
+        }
+        return new ArrayList<>(groupMap.values());
     }
+
+    @Override
+    public Optional<GroupDTO> getGroupDTO(int id) {
+        List<GroupMemberDTO> list = repository.findGroupMembersByGroupId(id);         
+    
+        if (list.isEmpty()) {
+            return Optional.empty();
+        }
+
+        // Tomamos el id y grupo de la primer fila ya que son todos del mismo grupo
+        // y creamos el DTO con los miembros
+        GroupDTO groupDTO = GroupDTO.builder()
+            .id(list.get(0).getId())
+            .name(list.get(0).getName())
+            .members(list.stream()
+                .map(row -> GroupDTO.MemberDTO.builder()
+                    .name(row.getMemberName())
+                    .isLeader(row.isLeader())
+                    .build())
+                .toList())
+            .build();
+        return Optional.of(groupDTO);
+    }
+
 
     @Override
     public Group save(Group group) {
@@ -52,15 +94,6 @@ public class GroupServiceImpl implements GroupService {
     @Override
     public Optional<Group> findById(int id) {
         return repository.findById(id);
-    }
-
-    @Override
-    public Optional<GroupDTO> getGroupDTO(int id) {
-        return repository.findById(id)
-            .map(group -> GroupDTO.builder()
-                .id(group.getId())
-                .name(group.getName())
-                .build());
     }
 
     @Override
@@ -133,6 +166,25 @@ public class GroupServiceImpl implements GroupService {
 
         groupUser.setLeader(leader);
         groupUserRepository.save(groupUser);
+    }
+
+    @Override
+    public void addEventToGroup(int groupId, int eventId) {
+        Group group = repository.findById(groupId)
+            .orElseThrow(() -> new RuntimeException("Grupo no encontrado"));
+
+        Event event = eventRepository.findById(eventId)
+            .orElseThrow(() -> new RuntimeException("Evento no encontrado"));
+
+        // Como es relacion bidireccional, agregamos tanto
+
+        group.addEvent(event); // Dentro del metodo de group, se agrega el grupo al evento
+
+        // Se guardan el evento y el grupo
+
+        repository.save(group);
+        eventRepository.save(event);
+        
     }
 
     

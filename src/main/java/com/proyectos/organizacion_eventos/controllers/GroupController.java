@@ -1,6 +1,5 @@
 package com.proyectos.organizacion_eventos.controllers;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -72,7 +71,6 @@ public class GroupController {
             GroupDTO dto = GroupDTO.builder()
                 .id(created.getId())
                 .name(created.getName())
-                .members(Collections.emptyList())
             .build();
             return ResponseEntity.status(HttpStatus.CREATED).body(dto);
         } catch (IllegalArgumentException e) {
@@ -183,4 +181,13 @@ public class GroupController {
         }
     }
 
+    @PostMapping("/{groupId}/events/{eventId}")
+    public ResponseEntity<?> addEvent(@PathVariable int groupId, @PathVariable int eventId) {
+        try {
+            service.addEventToGroup(groupId, eventId);
+            return ResponseEntity.ok(Map.of("mensaje", "Evento agregado al grupo correctamente"));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        }
+    }
 }

@@ -1,7 +1,9 @@
 package com.proyectos.organizacion_eventos.entities;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -59,7 +61,7 @@ public class User {
         joinColumns = @JoinColumn(name = "user_id"),
         inverseJoinColumns = @JoinColumn(name = "role_id"),
         uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "role_id"}))
-    private List<Role> roles;
+    private Set<Role> roles;
 
     //Relacion de ManyToMany (pero con tabla intermedia) - Muchos usuarios pueden estar en Muchos eventos
     @OneToMany(mappedBy = "user")
@@ -87,7 +89,7 @@ public class User {
         this.eventsAttendance = new ArrayList<>();
         this.eventsOrganizer = new ArrayList<>();
         this.groups = new ArrayList<>();
-        this.roles = new ArrayList<>();
+        this.roles = new HashSet<>();
         this.feedbacks = new ArrayList<>();
     }
 

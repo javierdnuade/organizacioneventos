@@ -26,4 +26,6 @@ public interface GroupService {
     boolean isLeader(int groupId, String username);
 
     void modifyLeader(int groupId, int userId, boolean leader);
+
+    void addEventToGroup(int groupId, int eventId);
 }
