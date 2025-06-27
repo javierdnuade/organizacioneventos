@@ -57,7 +57,7 @@ public class GroupServiceImpl implements GroupService {
                     .add(GroupDTO.MemberDTO.builder()
                         .name(row.getMemberName())
                         .isLeader(row.isLeader())
-                        .build());
+                    .build());
         }
         return new ArrayList<>(groupMap.values());
     }
@@ -126,6 +126,7 @@ public class GroupServiceImpl implements GroupService {
 
     @Override
     public Optional<GroupUser> removeMember(int groupId, int userId) {
+
         GroupUserId groupUserId = new GroupUserId(groupId, userId);
         Optional<GroupUser> groupUserOptional = groupUserRepository.findById(groupUserId);
         groupUserOptional.ifPresent(groupUser -> {
@@ -175,6 +176,10 @@ public class GroupServiceImpl implements GroupService {
 
         Event event = eventRepository.findById(eventId)
             .orElseThrow(() -> new RuntimeException("Evento no encontrado"));
+
+        if (group.getEvents().contains(event)) {
+            throw new RuntimeException("El evento ya está asociado al grupo");
+        }
 
         // Como es relacion bidireccional, agregamos tanto
 

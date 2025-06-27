@@ -1,5 +1,6 @@
 package com.proyectos.organizacion_eventos.controllers;
 
+import java.security.Principal;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -107,12 +108,13 @@ public class EventController {
         return ResponseEntity.notFound().build();
     }
 
-    @PostMapping("/{id}/addMember/{userId}")
+    @PostMapping("/{id}/addMember/{userId}")    
     public ResponseEntity<?> addMember(
             @PathVariable int id,
-            @PathVariable int userId) {
+            @PathVariable int userId,
+            Principal principal) {
         try {
-            service.addMember(id, userId);
+            service.addMember(id, userId, principal.getName());
             return ResponseEntity.ok(Map.of("mensaje", "Usuario agregado al evento correctamente"));
 
         } catch (RuntimeException e) {
@@ -120,6 +122,22 @@ public class EventController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
             .body(Map.of("error", e.getMessage() != null ? e.getMessage() : "No se pudo agregar el usuario al evento"));
         }
-
     }
+
+    @DeleteMapping("/{id}/removeMember/{userId}")
+    public ResponseEntity<?> removeMember (
+        @PathVariable int id,
+        @PathVariable int userId,
+        Principal principal) {
+            try {
+            service.removeMember(id, userId, principal.getName());
+            return ResponseEntity.ok(Map.of("mensaje", "Usuario removido del evento correctamente"));
+
+        } catch (RuntimeException e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+            .body(Map.of("error", e.getMessage() != null ? e.getMessage() : "No se pudo remover al usuario del evento"));
+        }
+    }
+    
 }

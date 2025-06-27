@@ -49,9 +49,12 @@ public class SpringSecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/events/**").hasAnyRole("USER", "ADMIN")
                 .requestMatchers(HttpMethod.GET, "/api/groups/**").hasAnyRole("USER", "ADMIN")
                 .requestMatchers(HttpMethod.DELETE, "/api/users/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/events/*/removeMember/*").hasAnyRole("USER", "ADMIN")
                 .requestMatchers(HttpMethod.DELETE, "/api/events/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.DELETE, "/api/groups/**").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.POST, "/api/events").hasRole("ADMIN")
+                // Permitir que USER y ADMIN agreguen o borren miembros de eventos
+                .requestMatchers(HttpMethod.POST, "/api/events/*/addMember/*").hasAnyRole("USER", "ADMIN")
+                .requestMatchers(HttpMethod.POST, "/api/events").hasAnyRole("ADMIN")
                 .requestMatchers(HttpMethod.POST, "/api/users").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.POST, "/api/groups").hasRole("ADMIN")
                 .anyRequest().authenticated()

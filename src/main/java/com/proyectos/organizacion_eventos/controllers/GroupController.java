@@ -148,6 +148,22 @@ public class GroupController {
             @PathVariable int groupId,
             @PathVariable int userId) {
 
+        // Revisamos rol del que maneja la solicitud
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String currentUsername = auth.getName();
+
+        // Verificamos is es ADMIN del sistema
+        boolean admin = auth.getAuthorities().stream()
+            .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+
+        // Verificamos si es lider lel grupo
+        boolean leader = service.isLeader(groupId, currentUsername);
+
+        if (!admin && !leader) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(Map.of("error", "Solo un lider o admin pueden borrar miembros de un grupo"));
+        }
+
         Optional<GroupUser> groupUserOpt = service.removeMember(groupId, userId);
         if (groupUserOpt.isPresent()) {
             String userName = groupUserOpt.get().getUser().getName();

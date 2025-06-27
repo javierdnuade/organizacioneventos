@@ -125,12 +125,16 @@ public class EventServiceImpl implements EventService{
 
     @Override
     @Transactional
-    public void addMember(int eventId, int userId) {
+    public void addMember(int eventId, int userId, String usernameAuth) {
         Event event = repository.findById(eventId)
             .orElseThrow(() -> new RuntimeException("Evento no encontrado"));
 
         User user = userRepository.findById(userId)
             .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        // Validamos que el usuario que manda la solicitud exista
+        User userAuth = userRepository.findByUsername(usernameAuth)
+            .orElseThrow(() -> new RuntimeException("Usuario autenticado no encontrado"));
 
         // Validamos que el usuario no esté inscrito en el evento
         EventUserId eventUserId = new EventUserId(eventId, userId);
@@ -151,6 +155,17 @@ public class EventServiceImpl implements EventService{
             throw new RuntimeException("El usuario no pertenece a ningún grupo asociado al evento");
         }
 
+        // Validamos que el usuario que manda la solicitud sea organizador del evento o rol admin
+
+        boolean isAdmin = userAuth.getRoles().stream()
+            .anyMatch(role -> role.getName().equals("ROLE_ADMIN"));
+
+        boolean isOrganizer = event.getOrganizer().getId() == userAuth.getId();
+
+        if (!isAdmin && !isOrganizer) {
+            throw new RuntimeException("El usuario autenticado no es administrador o organizador del evento");
+        }
+            
         // Creamos la asistencia al evento
         EventAttendance attendance = new EventAttendance(eventUserId, event, user, false);
         // Guardamos la asistencia
@@ -159,7 +174,34 @@ public class EventServiceImpl implements EventService{
 
     @Override
     @Transactional
-    public Optional<EventAttendance> removeMember(int eventId, int userId) {
-        throw new UnsupportedOperationException("Unimplemented method 'removeMember'");
+    public void removeMember(int eventId, int userId, String usernameAuth) {
+        // Validamos que el evento exista
+        Event event = repository.findById(eventId)
+            .orElseThrow( () -> new RuntimeException("Evento no encontrado"));
+
+
+        // Buscamos al usuario autenticado en la base
+        User userAuth = userRepository.findByUsername(usernameAuth)
+            .orElseThrow(() -> new RuntimeException("Usuario autenticado no encontrado"));
+
+        // Validamos que el usuario que manda la solicitud sea organizador del evento o rol admin
+
+        boolean isAdmin = userAuth.getRoles().stream()
+            .anyMatch(role -> role.getName().equals("ROLE_ADMIN"));
+
+        boolean isOrganizer = event.getOrganizer().getId() == userAuth.getId();
+        
+        if (!isAdmin && !isOrganizer) {
+            throw new RuntimeException("El usuario no es admin o organizador del evento");
+        }
+
+        // Validamos que esté inscrito en el evento
+        EventUserId id = new EventUserId(eventId, userId);
+        if (!eventAttendanceRepository.existsById(id)) {
+            throw new RuntimeException("El usuario no está inscrito en el evento");
+        }
+
+        // Eliminamos la asistencia
+        eventAttendanceRepository.deleteById(id);
     }
 }
