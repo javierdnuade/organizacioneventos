@@ -182,9 +182,7 @@ public class GroupServiceImpl implements GroupService {
 
         // Se guardan el evento y el grupo
 
-        repository.save(group);
-        eventRepository.save(event);
-        
+        repository.save(group);        
     }
 
     

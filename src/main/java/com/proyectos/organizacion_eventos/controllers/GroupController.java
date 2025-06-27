@@ -187,7 +187,8 @@ public class GroupController {
             service.addEventToGroup(groupId, eventId);
             return ResponseEntity.ok(Map.of("mensaje", "Evento agregado al grupo correctamente"));
         } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+            e.printStackTrace();
+            return ResponseEntity.notFound().build();
         }
     }
 }

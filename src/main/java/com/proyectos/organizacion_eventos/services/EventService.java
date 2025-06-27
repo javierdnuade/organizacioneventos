@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import com.proyectos.organizacion_eventos.dto.EventDTO;
 import com.proyectos.organizacion_eventos.entities.Event;
+import com.proyectos.organizacion_eventos.entities.EventAttendance;
 
 public interface EventService {
 
@@ -19,4 +20,8 @@ public interface EventService {
     List<EventDTO> findByStatus(String status);
 
     Optional<Event> delete(int id);
+
+    void addMember(int eventId, int userId);
+
+    Optional<EventAttendance> removeMember(int eventId, int userId);
 }

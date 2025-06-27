@@ -106,4 +106,20 @@ public class EventController {
         }
         return ResponseEntity.notFound().build();
     }
+
+    @PostMapping("/{id}/addMember/{userId}")
+    public ResponseEntity<?> addMember(
+            @PathVariable int id,
+            @PathVariable int userId) {
+        try {
+            service.addMember(id, userId);
+            return ResponseEntity.ok(Map.of("mensaje", "Usuario agregado al evento correctamente"));
+
+        } catch (RuntimeException e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+            .body(Map.of("error", e.getMessage() != null ? e.getMessage() : "No se pudo agregar el usuario al evento"));
+        }
+
+    }
 }

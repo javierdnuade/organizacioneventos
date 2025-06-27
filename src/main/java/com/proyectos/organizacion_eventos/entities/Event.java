@@ -1,6 +1,8 @@
 package com.proyectos.organizacion_eventos.entities;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -10,12 +12,10 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -54,17 +54,12 @@ public class Event {
     @JoinColumn(name = "status_id", nullable = false)
     private Status status;
 
-    @ManyToMany
-    @JoinTable(
-        name = "event_groups",
-        joinColumns = @JoinColumn(name = "event_id"),
-        inverseJoinColumns = @JoinColumn(name = "group_id"),
-        uniqueConstraints = @UniqueConstraint(columnNames = {"event_id", "group_id"}))
-    private Set<Group> groups;
+    @ManyToMany(mappedBy = "events")
+    private Set<Group> groups = new HashSet<>();
 
     @OneToMany(mappedBy = "event")
-    private List<FeedbackEvent> feedbacks;
+    private List<FeedbackEvent> feedbacks = new ArrayList<>();;
     
     @OneToMany(mappedBy = "event")
-    private List<EventAttendance> attendance;
+    private List<EventAttendance> attendance = new ArrayList<>();
 }

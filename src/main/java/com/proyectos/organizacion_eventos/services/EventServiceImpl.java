@@ -3,6 +3,7 @@ package com.proyectos.organizacion_eventos.services;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.StreamSupport;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,8 +12,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.proyectos.organizacion_eventos.dto.EventDTO;
 import com.proyectos.organizacion_eventos.entities.Event;
+import com.proyectos.organizacion_eventos.entities.EventAttendance;
+import com.proyectos.organizacion_eventos.entities.Group;
+import com.proyectos.organizacion_eventos.entities.GroupUser;
 import com.proyectos.organizacion_eventos.entities.Status;
 import com.proyectos.organizacion_eventos.entities.User;
+import com.proyectos.organizacion_eventos.entities.embeddable.EventUserId;
+import com.proyectos.organizacion_eventos.repositories.EventAttendanceRepository;
 import com.proyectos.organizacion_eventos.repositories.EventRepository;
 import com.proyectos.organizacion_eventos.repositories.StatusRepository;
 import com.proyectos.organizacion_eventos.repositories.UserRepository;
@@ -28,6 +34,9 @@ public class EventServiceImpl implements EventService{
 
     @Autowired
     private StatusRepository statusRepository;
+
+    @Autowired
+    private EventAttendanceRepository eventAttendanceRepository;
 
     @Transactional(readOnly = true)
     @Override
@@ -46,6 +55,7 @@ public class EventServiceImpl implements EventService{
     }
 
     @Override
+    @Transactional
     public Event save(Event event) {
         if (event.getDate().isBefore(LocalDateTime.now())) {
             throw new IllegalArgumentException("La fecha del evento debe ser futura");
@@ -104,11 +114,52 @@ public class EventServiceImpl implements EventService{
     }
 
     @Override
+    @Transactional
     public Optional<Event> delete(int id) {
         Optional<Event> eventOptional = repository.findById(id);
         eventOptional.ifPresent(event -> {
             repository.delete(event);
         });
         return eventOptional;
+    }
+
+    @Override
+    @Transactional
+    public void addMember(int eventId, int userId) {
+        Event event = repository.findById(eventId)
+            .orElseThrow(() -> new RuntimeException("Evento no encontrado"));
+
+        User user = userRepository.findById(userId)
+            .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        // Validamos que el usuario no esté inscrito en el evento
+        EventUserId eventUserId = new EventUserId(eventId, userId);
+        if (eventAttendanceRepository.existsById(eventUserId)) {
+            throw new RuntimeException("El usuario ya está inscrito en el evento");
+        }
+
+        // Validamos que el usuario este dentro de algun grupo del evento
+
+        Set<Group> groups = event.getGroups(); // Grupos que tiene el evento
+        List<GroupUser> userGroupLinks = user.getGroups(); // Relación con sus grupos
+
+        boolean pertenece = userGroupLinks.stream()
+            .map(GroupUser::getGroup)
+            .anyMatch(groups::contains);
+
+        if (!pertenece) {
+            throw new RuntimeException("El usuario no pertenece a ningún grupo asociado al evento");
+        }
+
+        // Creamos la asistencia al evento
+        EventAttendance attendance = new EventAttendance(eventUserId, event, user, false);
+        // Guardamos la asistencia
+        eventAttendanceRepository.save(attendance);
+    }
+
+    @Override
+    @Transactional
+    public Optional<EventAttendance> removeMember(int eventId, int userId) {
+        throw new UnsupportedOperationException("Unimplemented method 'removeMember'");
     }
 }
