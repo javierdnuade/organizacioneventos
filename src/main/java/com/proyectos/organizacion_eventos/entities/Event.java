@@ -67,6 +67,23 @@ public class Event {
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<EventAttendance> attendance = new ArrayList<>();
 
+    public void addGroup(Group group) {
+        groups.add(group);
+        group.getEvents().add(this);
+    }
+
+    public void removeGroup(Group group) {
+        groups.remove(group);
+        group.getEvents().remove(this);
+    }
+
+    public void clearGroups() {
+        // Para remover todos grupos correctamente
+        for (Group group : new HashSet<>(groups)) {
+            removeGroup(group);
+        }
+    }
+
     @Override
     public int hashCode() {
         final int prime = 31;

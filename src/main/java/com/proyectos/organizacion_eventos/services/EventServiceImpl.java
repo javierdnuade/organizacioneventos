@@ -118,6 +118,14 @@ public class EventServiceImpl implements EventService{
     public Optional<Event> delete(int id) {
         Optional<Event> eventOptional = repository.findById(id);
         eventOptional.ifPresent(event -> {
+            // Se eliminan las relaciones existentes en la tabla intermedia con los grupos para que no haya problemas de eliminacion de claves foraneas
+            event.clearGroups();
+
+            // Hacemos un save del evento con las relaciones borradas para que Hibernate pueda hacer el borrado bien
+            repository.save(event);  // para sincronizar las relaciones
+            repository.flush();
+
+            // Borramos el evento
             repository.delete(event);
         });
         return eventOptional;

@@ -50,6 +50,18 @@ public class Group {
 
     public void addEvent(Event event) {
         events.add(event);
+        event.getGroups().add(this);
+    }
+
+    public void removeEvent(Event event) {
+        events.remove(event);
+        event.getGroups().remove(this);
+    }
+
+    public void clearEvents() {
+        for (Event event : new HashSet<>(events)) {
+            removeEvent(event);
+        }
     }
 
     @Override
