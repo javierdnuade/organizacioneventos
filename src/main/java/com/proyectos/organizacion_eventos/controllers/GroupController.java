@@ -7,8 +7,6 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -20,6 +18,7 @@ import com.proyectos.organizacion_eventos.entities.GroupUser;
 import com.proyectos.organizacion_eventos.entities.User;
 import com.proyectos.organizacion_eventos.services.GroupService;
 import com.proyectos.organizacion_eventos.services.UserService;
+import com.proyectos.organizacion_eventos.utils.AuthUtilForGroup;
 import com.proyectos.organizacion_eventos.utils.ControllerUtils;
 
 import jakarta.validation.Valid;
@@ -40,6 +39,9 @@ public class GroupController {
 
     @Autowired
     private GroupService service;
+
+    @Autowired
+    private AuthUtilForGroup authLeaderAdmin;
 
     @GetMapping
     public ResponseEntity<List<GroupDTO>> list() {
@@ -104,21 +106,10 @@ public class GroupController {
         
         try {
 
-            // Revisamos rol del que maneja la solicitud
-            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-            String currentUsername = auth.getName();
-
-            // Verificamos is es ADMIN del sistema
-            boolean admin = auth.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
-
-            // Verificamos si es lider lel grupo
-
-            boolean leader = service.isLeader(groupId, currentUsername);
-
-            if (!admin && !leader) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                    .body(Map.of("error", "Solo un lider o admin pueden agregar miembros"));
+            // Validacion si es lider o admin, llamamos a la clase authLeaderAdmin para validar
+            ResponseEntity<?> validation = authLeaderAdmin.validationAdminOrLeader(groupId);
+            if (validation != null) {
+                return validation;
             }
 
             service.addMember(groupId, userId, isLeader);
@@ -148,20 +139,10 @@ public class GroupController {
             @PathVariable int groupId,
             @PathVariable int userId) {
 
-        // Revisamos rol del que maneja la solicitud
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String currentUsername = auth.getName();
-
-        // Verificamos is es ADMIN del sistema
-        boolean admin = auth.getAuthorities().stream()
-            .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
-
-        // Verificamos si es lider lel grupo
-        boolean leader = service.isLeader(groupId, currentUsername);
-
-        if (!admin && !leader) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                .body(Map.of("error", "Solo un lider o admin pueden borrar miembros de un grupo"));
+        // Validacion si es lider o admin, llamamos a la clase authLeaderAdmin para validar
+        ResponseEntity<?> validation = authLeaderAdmin.validationAdminOrLeader(groupId);
+        if (validation != null) {
+            return validation;
         }
 
         Optional<GroupUser> groupUserOpt = service.removeMember(groupId, userId);
@@ -200,6 +181,12 @@ public class GroupController {
     @PostMapping("/{groupId}/events/{eventId}")
     public ResponseEntity<?> addEvent(@PathVariable int groupId, @PathVariable int eventId) {
         try {
+            // Validacion si es lider o admin, llamamos a la clase authLeaderAdmin para validar
+            ResponseEntity<?> validation = authLeaderAdmin.validationAdminOrLeader(groupId);
+            if (validation != null) {
+                return validation;
+            }
+
             service.addEventToGroup(groupId, eventId);
             return ResponseEntity.ok(Map.of("mensaje", "Evento agregado al grupo correctamente"));
         } catch (RuntimeException e) {
