@@ -7,4 +7,5 @@ import com.proyectos.organizacion_eventos.entities.embeddable.EventUserId;
 
 public interface EventAttendanceRepository extends CrudRepository<EventAttendance, EventUserId> {
 
+
 }

@@ -23,4 +23,13 @@ public interface EventRepository extends JpaRepository<Event, Integer> {
             WHERE att.event.id = :eventId
             """)
     List<EventParticipantDTO> findParticipantsByEventId(@Param("eventId") int eventId);
+
+    @Query("""
+            SELECT new com.proyectos.organizacion_eventos.dto.EventParticipantDTO(
+                att.user.id, att.user.name, att.attended
+            )
+            FROM EventAttendance att
+            WHERE att.event.id = :eventId AND att.attended = :attended
+            """)
+    List<EventParticipantDTO> findParticipantsByAttended(@Param("eventId") int eventId, @Param("attended") boolean attended); 
 }

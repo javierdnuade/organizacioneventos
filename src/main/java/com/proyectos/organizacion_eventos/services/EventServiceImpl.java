@@ -220,4 +220,25 @@ public class EventServiceImpl implements EventService{
         // Eliminamos la asistencia
         eventAttendanceRepository.deleteById(id);
     }
+
+    @Override
+    public Optional<EventDTO> getParticipationForEventDTO(int id, boolean attendance) {
+        Optional<Event> eventOptional = repository.findById(id);
+        if (eventOptional.isEmpty()) {
+            return Optional.empty();
+        }
+
+        Event event = eventOptional.get();
+        List<EventParticipantDTO> participants = repository.findParticipantsByAttended(id, attendance);
+        return Optional.of(EventDTO.builder()
+            .id(event.getId())
+            .name(event.getName())
+            .description(event.getDescription())
+            .date(event.getDate())
+            .location(event.getLocation())
+            .status(event.getStatus().getDescription())
+            .organizer(event.getOrganizer().getName())
+            .attendance(participants)
+            .build());
+    }
 }

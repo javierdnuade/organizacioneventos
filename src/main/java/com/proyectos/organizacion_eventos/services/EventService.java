@@ -23,4 +23,10 @@ public interface EventService {
     void addMember(int eventId, int userId, String usernameAuth);
 
     void removeMember(int eventId, int userId, String usernameAuth);
+
+    Optional<EventDTO> getParticipationForEventDTO(int id, boolean attendance);
+
+
+
+
 }

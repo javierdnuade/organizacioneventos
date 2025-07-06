@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.proyectos.organizacion_eventos.dto.EventDTO;
@@ -138,6 +139,15 @@ public class EventController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
             .body(Map.of("error", e.getMessage() != null ? e.getMessage() : "No se pudo remover al usuario del evento"));
         }
+    }
+
+     @GetMapping("/{id}/attendance")
+    public ResponseEntity<EventDTO> showEventAttendance (@PathVariable int id, @RequestParam Boolean attended) {
+
+        return service.getParticipationForEventDTO(id, attended)
+        .map(ResponseEntity::ok)
+        .orElse(ResponseEntity.notFound().build()); 
+
     }
     
 }
