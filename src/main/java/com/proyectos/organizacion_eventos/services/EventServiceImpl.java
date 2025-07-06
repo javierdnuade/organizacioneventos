@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.proyectos.organizacion_eventos.dto.EventDTO;
+import com.proyectos.organizacion_eventos.dto.EventParticipantDTO;
 import com.proyectos.organizacion_eventos.entities.Event;
 import com.proyectos.organizacion_eventos.entities.EventAttendance;
 import com.proyectos.organizacion_eventos.entities.Group;
@@ -76,16 +77,23 @@ public class EventServiceImpl implements EventService{
     @Transactional(readOnly = true)
     @Override
     public Optional<EventDTO> getEventDTO(int id) {
-        return repository.findById(id)
-            .map(event -> EventDTO.builder()
-                .id(event.getId())
-                .name(event.getName())
-                .description(event.getDescription())
-                .date(event.getDate())
-                .location(event.getLocation())
-                .status(event.getStatus().getDescription())
-                .organizer(event.getOrganizer().getName())
-                .build());
+        Optional<Event> eventOptional = repository.findById(id);
+        if (eventOptional.isEmpty()) {
+            return Optional.empty();
+        }
+
+        Event event = eventOptional.get();
+        List<EventParticipantDTO> participants = repository.findParticipantsByEventId(id);
+        return Optional.of(EventDTO.builder()
+            .id(event.getId())
+            .name(event.getName())
+            .description(event.getDescription())
+            .date(event.getDate())
+            .location(event.getLocation())
+            .status(event.getStatus().getDescription())
+            .organizer(event.getOrganizer().getName())
+            .attendance(participants)
+            .build());
     }
 
     @Transactional(readOnly = true)

@@ -22,6 +22,6 @@ public class EventDTO {
     private String organizer; // o UserDTO si quieres más detalle
 
     // Lista de asistentes
-    private List<String> attendance;
+    private List<EventParticipantDTO> attendance;
 }
 
