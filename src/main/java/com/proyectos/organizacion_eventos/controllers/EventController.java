@@ -141,7 +141,7 @@ public class EventController {
         }
     }
 
-     @GetMapping("/{id}/attendance")
+    @GetMapping("/{id}/attendance")
     public ResponseEntity<EventDTO> showEventAttendance (@PathVariable int id, @RequestParam Boolean attended) {
 
         return service.getParticipationForEventDTO(id, attended)

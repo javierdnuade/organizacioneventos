@@ -30,9 +30,9 @@ public class FeedbackEvent {
     @JoinColumn(name = "user_id")
     private User user;
 
-    private String feeedback;
+    private String feedback;
 
     public FeedbackEvent() {
-        this.feeedback = "";
+        this.feedback = "";
     }
 }
