@@ -149,45 +149,41 @@ public class GroupServiceImpl implements GroupService {
     }
 
     @Override
-    public void modifyLeader(int groupId, int userId, boolean leader) {
-        // Verifica si existe el grupo
-        if (repository.findById(groupId).isEmpty()) {
-            throw new RuntimeException("Grupo no encontrado");
-        }
-        // Verifica si existe el usuario
-        if (userRepository.findById(userId).isEmpty()) {
-            throw new RuntimeException("Usuario no encontrado");
-        }
+    public Optional<GroupUser> modifyLeader(int groupId, int userId, boolean leader) {
 
         // Verificamos si el usuario es miembro del grupo.
 
         GroupUserId groupUserId = new GroupUserId(groupId, userId);
-        GroupUser groupUser = groupUserRepository.findById(groupUserId)
-            .orElseThrow( () -> new RuntimeException("El usuario no es miembro del grupo"));
-
-        groupUser.setLeader(leader);
-        groupUserRepository.save(groupUser);
+        Optional<GroupUser> groupUser = groupUserRepository.findById(groupUserId);
+        groupUser.ifPresent(gr -> {
+            gr.setLeader(leader);
+            groupUserRepository.save(gr);
+        });
+        return groupUser;
     }
 
     @Override
-    public void addEventToGroup(int groupId, int eventId) {
-        Group group = repository.findById(groupId)
-            .orElseThrow(() -> new RuntimeException("Grupo no encontrado"));
+    public Optional<String> addEventToGroup(int groupId, int eventId) {
+        Optional<Group> groupOpt = repository.findById(groupId);
+        if (groupOpt.isEmpty()) return Optional.of("Evento no encontrado");
 
-        Event event = eventRepository.findById(eventId)
-            .orElseThrow(() -> new RuntimeException("Evento no encontrado"));
+        Optional<Event> eventOpt = eventRepository.findById(eventId);
+        if (eventOpt.isEmpty()) return Optional.of("Evento no encontrado");
+
+        Group group = groupOpt.get();
+        Event event = eventOpt.get();
 
         if (group.getEvents().contains(event)) {
-            throw new RuntimeException("El evento ya está asociado al grupo");
+            return Optional.of("El evento ya está asociado al grupo");
         }
 
-        // Como es relacion bidireccional, agregamos tanto
-
+        // Como es relacion bidireccional, agregamos tanto el evento al grupo como el grupo al evento
         group.addEvent(event); // Dentro del metodo de group, se agrega el grupo al evento
 
         // Se guardan el evento y el grupo
-
-        repository.save(group);        
+        repository.save(group);
+        
+        return Optional.empty(); // No hay error, por lo que retornamos un Optional vacío
     }
 
     

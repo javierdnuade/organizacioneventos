@@ -162,37 +162,39 @@ public class GroupController {
             @PathVariable int userId,
             @RequestParam boolean isLeader) {
 
-        try {
-            service.modifyLeader(groupId, userId, isLeader);
-            return ResponseEntity.ok(Map.of(
-                "mensaje", "El usuario fue " + (isLeader ? "asignado como lider" : "removido como lider")));
-        } catch (RuntimeException e) 
-        {
-            if (e.getMessage().contains("no encontrado") || e.getMessage().contains("no es miembro")) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
-            }
-            if (e.getMessage().contains("ya es lider")) {
-                return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", e.getMessage()));
-            }
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", e.getMessage()));
+        // Validacion si es lider o admin, llamamos a la clase authLeaderAdmin para validar
+        ResponseEntity<?> validation = authLeaderAdmin.validationAdminOrLeader(groupId);
+        if (validation != null) {
+            return validation;
         }
+
+        Optional<GroupUser> groupUserOpt= service.modifyLeader(groupId, userId, isLeader);
+        
+        if (groupUserOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Map.of("error", "El usuario no forma parte del grupo"));
+
+        }                
+        return ResponseEntity.ok(Map.of(
+            "mensaje", "El usuario fue " + (isLeader ? "asignado como lider" : "removido como lider")));
+        
+         
     }
 
     @PostMapping("/{groupId}/events/{eventId}")
     public ResponseEntity<?> addEvent(@PathVariable int groupId, @PathVariable int eventId) {
-        try {
-            // Validacion si es lider o admin, llamamos a la clase authLeaderAdmin para validar
-            ResponseEntity<?> validation = authLeaderAdmin.validationAdminOrLeader(groupId);
-            if (validation != null) {
-                return validation;
-            }
-
-            service.addEventToGroup(groupId, eventId);
-            return ResponseEntity.ok(Map.of("mensaje", "Evento agregado al grupo correctamente"));
-        } catch (RuntimeException e) {
-            e.printStackTrace();
-            return ResponseEntity.notFound().build();
+        
+        // Validacion si es lider o admin, llamamos a la clase authLeaderAdmin para validar
+        ResponseEntity<?> validation = authLeaderAdmin.validationAdminOrLeader(groupId);
+        if (validation != null) {
+            return validation;
         }
+
+        Optional<String> errorResult = service.addEventToGroup(groupId, eventId);
+        if (errorResult.isPresent()) {
+            return ResponseEntity.badRequest().body(Map.of("error", errorResult.get()));
+        }
+        return ResponseEntity.ok(Map.of("mensaje", "Evento agregado al grupo correctamente"));
     }
     
 }

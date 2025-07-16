@@ -148,7 +148,12 @@ public class EventController {
 
 
     @GetMapping("/{id}/attendance")
-    public ResponseEntity<EventDTO> showEventAttendance (@PathVariable int id, @RequestParam Boolean attended) {
+    public ResponseEntity<?> showEventAttendance (@PathVariable int id, @RequestParam Boolean attended) {
+
+        ResponseEntity<?> validation = authOrganizerAndAdminEvent.validationAdminOrOrganizer(id);
+        if (validation != null) {
+            return validation;
+        }
 
         return service.getParticipationForEventDTO(id, attended)
         .map(ResponseEntity::ok)
