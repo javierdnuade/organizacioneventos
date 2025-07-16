@@ -2,8 +2,10 @@ package com.proyectos.organizacion_eventos.repositories;
 
 import java.util.List;
 
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
+import org.springframework.data.repository.query.Param;
 
 import com.proyectos.organizacion_eventos.dto.EventFeedbackDTO;
 import com.proyectos.organizacion_eventos.entities.FeedbackEvent;
@@ -18,4 +20,8 @@ public interface FeedbackEventRepository extends CrudRepository<FeedbackEvent, E
             WHERE fb.event.id = :eventId
             """)
             List<EventFeedbackDTO> findFeedbackByEventId(int eventId);
+
+    @Modifying
+    @Query("DELETE FROM FeedbackEvent fb WHERE fb.user.id = :userId")
+    void deleteByUserId(@Param("userId") int userId);
 }

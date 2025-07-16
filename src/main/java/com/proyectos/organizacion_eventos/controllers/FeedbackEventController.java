@@ -1,6 +1,8 @@
 package com.proyectos.organizacion_eventos.controllers;
 
 import java.util.List;
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +19,7 @@ import com.proyectos.organizacion_eventos.dto.FeedbackRequestDTO;
 import com.proyectos.organizacion_eventos.entities.User;
 import com.proyectos.organizacion_eventos.services.FeedbackEventService;
 import com.proyectos.organizacion_eventos.services.UserService;
+import com.proyectos.organizacion_eventos.utils.AuthOrganizerAndAdminEvent;
 
 import jakarta.validation.Valid;
 
@@ -26,6 +29,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 @RestController
 @RequestMapping("/api/feedback-events")
 public class FeedbackEventController {
+
+    @Autowired
+    private AuthOrganizerAndAdminEvent authOrganizerAndAdminEvent;
 
     @Autowired
     private UserService userService;
@@ -40,12 +46,8 @@ public class FeedbackEventController {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String currentUsername = auth.getName();
 
-        User user = userService.findByUsername(currentUsername)
-            .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-
-        if (!currentUsername.equals(user.getUsername())) {
-            return ResponseEntity.status(401).body("No tienes permiso para agregar feedback a este usuario");
-        }
+        Optional<User> userOpt = userService.findByUsername(currentUsername);
+        User user = userOpt.get();
 
         try {
             service.addFeedback(eventId, user.getId(), textFeedbackUser.getFeedback());
@@ -56,7 +58,14 @@ public class FeedbackEventController {
     }
 
     @GetMapping("{eventId}")
-    public ResponseEntity<List<EventFeedbackDTO>> getFeedbackForEvent (@PathVariable int eventId) {
+    public ResponseEntity<?> getFeedbackForEvent (@PathVariable int eventId) {
+
+        // Validacion si es admin o organizador del evento
+        ResponseEntity<?> validation = authOrganizerAndAdminEvent.validationAdminOrOrganizer(eventId);
+        if (validation != null) {
+            return validation;
+        }
+
         List<EventFeedbackDTO> feedbackList = service.getFeedbackByEvent(eventId);
         if (feedbackList.isEmpty()) {
             return ResponseEntity.noContent().build();

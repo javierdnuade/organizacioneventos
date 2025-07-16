@@ -14,11 +14,23 @@ import org.springframework.transaction.annotation.Transactional;
 import com.proyectos.organizacion_eventos.dto.UserDTO;
 import com.proyectos.organizacion_eventos.entities.Role;
 import com.proyectos.organizacion_eventos.entities.User;
+import com.proyectos.organizacion_eventos.repositories.EventAttendanceRepository;
+import com.proyectos.organizacion_eventos.repositories.FeedbackEventRepository;
+import com.proyectos.organizacion_eventos.repositories.GroupUserRepository;
 import com.proyectos.organizacion_eventos.repositories.RoleRepository;
 import com.proyectos.organizacion_eventos.repositories.UserRepository;
 
 @Service
 public class UserServiceImpl implements UserService {
+
+    @Autowired
+    private FeedbackEventRepository feedbackEventRepository;
+
+    @Autowired
+    private GroupUserRepository groupUserRepository;
+
+    @Autowired
+    private EventAttendanceRepository eventAttendanceRepository;
 
     @Autowired
     private UserRepository repository;
@@ -117,9 +129,16 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public Optional<User> deleteById(int id) {
         Optional<User> userOptional = repository.findById(id);
         userOptional.ifPresent(user -> {
+
+             // Borrar filas en tablas relacionadas primero
+            eventAttendanceRepository.deleteByUserId(user.getId());
+            feedbackEventRepository.deleteByUserId(user.getId());
+            groupUserRepository.deleteByUserId(user.getId());
+
             repository.delete(user);
         });
         return userOptional;

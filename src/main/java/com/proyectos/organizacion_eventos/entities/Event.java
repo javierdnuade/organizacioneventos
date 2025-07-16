@@ -6,6 +6,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -41,9 +44,9 @@ public class Event {
     @Column(nullable = false)
     private String name;
 
-    @NotNull(message = "El organizador del evento es obligatorio")
     @ManyToOne
-    @JoinColumn(name = "organizer_id", nullable = false)
+    @JoinColumn(name = "organizer_id", nullable = true)
+    @OnDelete(action = OnDeleteAction.SET_NULL)
     private User organizer;
 
     private String description;

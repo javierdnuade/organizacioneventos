@@ -64,20 +64,20 @@ public class User {
     private Set<Role> roles;
 
     //Relacion de ManyToMany (pero con tabla intermedia) - Muchos usuarios pueden estar en Muchos eventos
-    @OneToMany(mappedBy = "user")
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<EventAttendance> eventsAttendance;
 
     //Relación de OneToMany - Un usuario puede organizar muchos eventos
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany
     @JoinColumn(name = "organizer_id")
     private List<Event> eventsOrganizer;
 
     //Relacion de ManyToMany pero con tabla intermedia enriquecida - Muchos usuarios pueden estar en Muchos grupos
-    @OneToMany(mappedBy = "user")
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<GroupUser> groups;
 
     //Relacion de ManyToMany (pero con tabla intermedia) - Muchos usuarios pueden tener muchos feedbacks
-    @OneToMany(mappedBy = "user")
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<FeedbackEvent> feedbacks;
 
     // No es un campo de la BD, es una bandera para cuando se crea el usuario, se asigna si es admin o no

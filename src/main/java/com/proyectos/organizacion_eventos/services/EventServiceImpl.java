@@ -141,24 +141,24 @@ public class EventServiceImpl implements EventService{
 
     @Override
     @Transactional
-    public void addMember(int eventId, int userId, String usernameAuth) {
-        Event event = repository.findById(eventId)
-            .orElseThrow(() -> new RuntimeException("Evento no encontrado"));
+    public Optional<String> addMember(int eventId, int userId) {
+       
+        Optional<Event> eventOpt = repository.findById(eventId);
+        if (eventOpt.isEmpty()) return Optional.of("Evento no encontrado");
 
-        User user = userRepository.findById(userId)
-            .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        Optional<User> userOpt = userRepository.findById(userId);
+        if (userOpt.isEmpty()) return Optional.of("Usuario no encontrado");
 
-        // Validamos que el usuario que manda la solicitud exista
-        User userAuth = userRepository.findByUsername(usernameAuth)
-            .orElseThrow(() -> new RuntimeException("Usuario autenticado no encontrado"));
+        Event event = eventOpt.get();
+        User user = userOpt.get();
 
-        // Validamos que el usuario no esté inscrito en el evento
         EventUserId eventUserId = new EventUserId(eventId, userId);
         if (eventAttendanceRepository.existsById(eventUserId)) {
-            throw new RuntimeException("El usuario ya está inscrito en el evento");
+            return Optional.of("El usuario ya está inscrito en el evento");
         }
 
         // Validamos que el usuario este dentro de algun grupo del evento
+        // Esta logica va aca, ya que es logica de negocio y no de autorizacion/autenticacion
 
         Set<Group> groups = event.getGroups(); // Grupos que tiene el evento
         List<GroupUser> userGroupLinks = user.getGroups(); // Relación con sus grupos
@@ -168,57 +168,27 @@ public class EventServiceImpl implements EventService{
             .anyMatch(groups::contains);
 
         if (!pertenece) {
-            throw new RuntimeException("El usuario no pertenece a ningún grupo asociado al evento");
-        }
-
-        // Validamos que el usuario que manda la solicitud sea organizador del evento o rol admin
-
-        boolean isAdmin = userAuth.getRoles().stream()
-            .anyMatch(role -> role.getName().equals("ROLE_ADMIN"));
-
-        boolean isOrganizer = event.getOrganizer().getId() == userAuth.getId();
-
-        if (!isAdmin && !isOrganizer) {
-            throw new RuntimeException("El usuario autenticado no es administrador o organizador del evento");
+            return Optional.of("El usuario no pertenece a ningun grupo del evento");
         }
             
         // Creamos la asistencia al evento
         EventAttendance attendance = new EventAttendance(eventUserId, event, user, false);
         // Guardamos la asistencia
         eventAttendanceRepository.save(attendance);
+        return Optional.empty(); // No hay error, por lo que retornamos un Optional vacío
     }
 
     @Override
     @Transactional
-    public void removeMember(int eventId, int userId, String usernameAuth) {
-        // Validamos que el evento exista
-        Event event = repository.findById(eventId)
-            .orElseThrow( () -> new RuntimeException("Evento no encontrado"));
-
-
-        // Buscamos al usuario autenticado en la base
-        User userAuth = userRepository.findByUsername(usernameAuth)
-            .orElseThrow(() -> new RuntimeException("Usuario autenticado no encontrado"));
-
-        // Validamos que el usuario que manda la solicitud sea organizador del evento o rol admin
-
-        boolean isAdmin = userAuth.getRoles().stream()
-            .anyMatch(role -> role.getName().equals("ROLE_ADMIN"));
-
-        boolean isOrganizer = event.getOrganizer().getId() == userAuth.getId();
-        
-        if (!isAdmin && !isOrganizer) {
-            throw new RuntimeException("El usuario no es admin o organizador del evento");
-        }
+    public Optional<EventAttendance> removeMember(int eventId, int userId) {
 
         // Validamos que esté inscrito en el evento
         EventUserId id = new EventUserId(eventId, userId);
-        if (!eventAttendanceRepository.existsById(id)) {
-            throw new RuntimeException("El usuario no está inscrito en el evento");
-        }
-
-        // Eliminamos la asistencia
-        eventAttendanceRepository.deleteById(id);
+        Optional<EventAttendance> attendanceOptional = eventAttendanceRepository.findById(id);
+        attendanceOptional.ifPresent( att -> {
+            eventAttendanceRepository.delete(att);
+        });
+        return attendanceOptional;
     }
 
     @Override
@@ -240,5 +210,21 @@ public class EventServiceImpl implements EventService{
             .organizer(event.getOrganizer().getName())
             .attendance(participants)
             .build());
+    }
+
+    @Override
+    public boolean isOrganizer(int eventId, String username) {
+        Optional<User> userOpt = userRepository.findByUsername(username);
+        Optional<Event> eventOpt = repository.findById(eventId);
+        
+        // Si no existe el usuario o el evento, retorna false
+        if (userOpt.isEmpty() || eventOpt.isEmpty()) {
+            return false;
+        }
+        User user = userOpt.get();
+        Event event = eventOpt.get();
+
+        // Validamos si el usuario es el organizador del evento mediante el id
+        return event.getOrganizer().getId() == user.getId();
     }
 }

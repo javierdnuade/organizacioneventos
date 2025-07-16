@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import com.proyectos.organizacion_eventos.dto.EventDTO;
 import com.proyectos.organizacion_eventos.entities.Event;
+import com.proyectos.organizacion_eventos.entities.EventAttendance;
 
 public interface EventService {
 
@@ -20,11 +21,13 @@ public interface EventService {
 
     Optional<Event> delete(int id);
 
-    void addMember(int eventId, int userId, String usernameAuth);
+    Optional<String> addMember(int eventId, int userId);
 
-    void removeMember(int eventId, int userId, String usernameAuth);
+    Optional<EventAttendance> removeMember(int eventId, int userId);
 
     Optional<EventDTO> getParticipationForEventDTO(int id, boolean attendance);
+
+    boolean isOrganizer(int eventId, String username);
 
 
 

@@ -1,6 +1,5 @@
 package com.proyectos.organizacion_eventos.controllers;
 
-import java.security.Principal;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -15,7 +14,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.proyectos.organizacion_eventos.dto.EventDTO;
 import com.proyectos.organizacion_eventos.entities.Event;
+import com.proyectos.organizacion_eventos.entities.EventAttendance;
 import com.proyectos.organizacion_eventos.services.EventService;
+import com.proyectos.organizacion_eventos.utils.AuthOrganizerAndAdminEvent;
 import com.proyectos.organizacion_eventos.utils.ControllerUtils;
 
 import jakarta.validation.Valid;
@@ -26,12 +27,12 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
-
-
-
 @RestController
 @RequestMapping("/api/events")
 public class EventController {
+
+    @Autowired
+    private AuthOrganizerAndAdminEvent authOrganizerAndAdminEvent;
 
     @Autowired
     private EventService service;
@@ -112,34 +113,39 @@ public class EventController {
     @PostMapping("/{id}/addMember/{userId}")    
     public ResponseEntity<?> addMember(
             @PathVariable int id,
-            @PathVariable int userId,
-            Principal principal) {
-        try {
-            service.addMember(id, userId, principal.getName());
-            return ResponseEntity.ok(Map.of("mensaje", "Usuario agregado al evento correctamente"));
+            @PathVariable int userId) {
 
-        } catch (RuntimeException e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-            .body(Map.of("error", e.getMessage() != null ? e.getMessage() : "No se pudo agregar el usuario al evento"));
+        ResponseEntity<?> validation = authOrganizerAndAdminEvent.validationAdminOrOrganizer(id);
+        if (validation != null) {
+            return validation;
         }
+
+        Optional<String> errorResult = service.addMember(id, userId);
+        if (errorResult.isPresent()) {
+            return ResponseEntity.badRequest().body(Map.of("error", errorResult.get()));
+        }
+        return ResponseEntity.ok(Map.of("mensaje", "Usuario agregado al evento correctamente"));
     }
 
     @DeleteMapping("/{id}/removeMember/{userId}")
     public ResponseEntity<?> removeMember (
         @PathVariable int id,
-        @PathVariable int userId,
-        Principal principal) {
-            try {
-            service.removeMember(id, userId, principal.getName());
-            return ResponseEntity.ok(Map.of("mensaje", "Usuario removido del evento correctamente"));
-
-        } catch (RuntimeException e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-            .body(Map.of("error", e.getMessage() != null ? e.getMessage() : "No se pudo remover al usuario del evento"));
+        @PathVariable int userId) {
+        
+        ResponseEntity<?> validation = authOrganizerAndAdminEvent.validationAdminOrOrganizer(id);
+        if (validation != null) {
+            return validation;
         }
+
+        Optional <EventAttendance> result = service.removeMember(id, userId);
+        if (result.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Map.of("error", "El usuario no estaba inscrito en el evento"));
+        }
+
+        return ResponseEntity.ok(Map.of("mensaje", "Usuario removido del evento correctamente"));
     }
+
 
     @GetMapping("/{id}/attendance")
     public ResponseEntity<EventDTO> showEventAttendance (@PathVariable int id, @RequestParam Boolean attended) {
