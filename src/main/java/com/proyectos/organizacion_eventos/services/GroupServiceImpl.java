@@ -56,7 +56,7 @@ public class GroupServiceImpl implements GroupService {
                     .getMembers()
                     .add(GroupDTO.MemberDTO.builder()
                         .name(row.getMemberName())
-                        .isLeader(row.isLeader())
+                        .isLeader(Boolean.TRUE.equals(row.getIsLeader()))
                     .build());
         }
         return new ArrayList<>(groupMap.values());
@@ -65,23 +65,27 @@ public class GroupServiceImpl implements GroupService {
     @Override
     public Optional<GroupDTO> getGroupDTO(int id) {
         List<GroupMemberDTO> list = repository.findGroupMembersByGroupId(id);         
-    
+
+        // 🔴 Si no existe ningún grupo con ese ID, entonces sí devolvés vacío.
         if (list.isEmpty()) {
-            return Optional.empty();
+            return Optional.empty(); // <-- mantiene el 404 para grupos inexistentes
         }
 
-        // Tomamos el id y grupo de la primer fila ya que son todos del mismo grupo
-        // y creamos el DTO con los miembros
+        // 🟢 Pero si el grupo existe, aunque no tenga usuarios, la lista tendrá al menos una fila con memberName = null
         GroupDTO groupDTO = GroupDTO.builder()
             .id(list.get(0).getId())
             .name(list.get(0).getName())
-            .members(list.stream()
-                .map(row -> GroupDTO.MemberDTO.builder()
-                    .name(row.getMemberName())
-                    .isLeader(row.isLeader())
-                    .build())
-                .toList())
+            .members(
+                list.stream()
+                    .filter(row -> row.getMemberName() != null) // solo miembros válidos
+                    .map(row -> GroupDTO.MemberDTO.builder()
+                        .name(row.getMemberName())
+                        .isLeader(Boolean.TRUE.equals(row.getIsLeader()))
+                        .build())
+                    .toList()
+            )
             .build();
+
         return Optional.of(groupDTO);
     }
 
@@ -99,9 +103,13 @@ public class GroupServiceImpl implements GroupService {
     @Override
     public Optional<Group> delete(int id) {
         Optional<Group> groupOptional = repository.findById(id);
-        groupOptional.ifPresent(group -> {
+
+        if (groupOptional.isPresent()) {
+            Group group = groupOptional.get();
             repository.delete(group);
-        });
+            return groupOptional; // Retornamos el grupo eliminado
+        }
+        // Si no se encuentra el grupo, retornamos un Optional vacío
         return groupOptional;
     }
 

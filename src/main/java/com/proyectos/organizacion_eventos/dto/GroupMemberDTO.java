@@ -14,6 +14,6 @@ public class GroupMemberDTO {
     private int id;
     private String name;
     private String memberName;
-    private boolean isLeader;
+    private Boolean isLeader;
 
 }

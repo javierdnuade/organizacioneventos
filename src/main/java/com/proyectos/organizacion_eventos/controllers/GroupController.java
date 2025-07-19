@@ -62,34 +62,31 @@ public class GroupController {
 
     @PostMapping
     public ResponseEntity<?> create (@Valid @RequestBody Group group, BindingResult result) {
+
         ResponseEntity<?> errors = ControllerUtils.getErrorsResponse(result);
         if (errors != null) {
             return errors;
         }
 
-        try {
-            Group created = service.save(group);
-            // Convertimso el grupo en DTO para su impresion
-            GroupDTO dto = GroupDTO.builder()
-                .id(created.getId())
-                .name(created.getName())
+        Group created = service.save(group);
+        // Convertimso el grupo en DTO para su impresion
+        GroupDTO dto = GroupDTO.builder()
+            .id(created.getId())
+            .name(created.getName())
             .build();
-            return ResponseEntity.status(HttpStatus.CREATED).body(dto);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
-        }
+        return ResponseEntity.status(HttpStatus.CREATED).body(dto);
+        
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteGroup(@PathVariable int id) {
-        Optional<Group> groupOptional = service.findById(id);
+        Optional<Group> groupOptional = service.delete(id);
         if (groupOptional.isPresent()) {
             Group group = groupOptional.get();
             GroupDTO dto = GroupDTO.builder()   
                 .id(group.getId())
                 .name(group.getName())
             .build();
-            service.delete(id);
             return ResponseEntity.ok(dto);
         }
         return ResponseEntity.notFound().build();
