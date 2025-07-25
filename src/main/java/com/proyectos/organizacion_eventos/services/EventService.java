@@ -27,7 +27,7 @@ public interface EventService {
 
     Optional<EventDTO> getParticipationForEventDTO(int id, boolean attendance);
 
-    boolean isOrganizer(int eventId, String username);
+    Boolean isOrganizer(int eventId, String username);
 
 
 

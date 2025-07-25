@@ -213,18 +213,18 @@ public class EventServiceImpl implements EventService{
     }
 
     @Override
-    public boolean isOrganizer(int eventId, String username) {
-        Optional<User> userOpt = userRepository.findByUsername(username);
+    public Boolean isOrganizer(int eventId, String username) {
         Optional<Event> eventOpt = repository.findById(eventId);
         
-        // Si no existe el usuario o el evento, retorna false
-        if (userOpt.isEmpty() || eventOpt.isEmpty()) {
+        if (eventOpt.isEmpty()) {
             return false;
         }
-        User user = userOpt.get();
-        Event event = eventOpt.get();
 
-        // Validamos si el usuario es el organizador del evento mediante el id
-        return event.getOrganizer().getId() == user.getId();
+        Event event = eventOpt.get();
+        User organizer = event.getOrganizer();
+        if (organizer == null) {
+            return null; // Evento sin organizador
+        }
+        return organizer.getUsername().equals(username);
     }
 }

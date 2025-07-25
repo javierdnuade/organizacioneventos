@@ -72,6 +72,6 @@ public class FeedbackEventController {
         }
 
         return ResponseEntity.ok(feedbackList);
-        
+            
     }
 }
