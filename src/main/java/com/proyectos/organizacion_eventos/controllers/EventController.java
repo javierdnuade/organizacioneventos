@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
@@ -20,6 +19,7 @@ import com.proyectos.organizacion_eventos.utils.AuthOrganizerAndAdminEvent;
 import com.proyectos.organizacion_eventos.utils.ControllerUtils;
 
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,13 +29,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 @RestController
 @RequestMapping("/api/events")
+@RequiredArgsConstructor
 public class EventController {
 
-    @Autowired
-    private AuthOrganizerAndAdminEvent authOrganizerAndAdminEvent;
-
-    @Autowired
-    private EventService service;
+    private final AuthOrganizerAndAdminEvent authOrganizerAndAdminEvent;
+    
+    private final EventService service;
 
     @GetMapping
     public ResponseEntity<List<EventDTO>> list() {
@@ -102,7 +101,8 @@ public class EventController {
                 .date(event.getDate())
                 .location(event.getLocation())
                 .status(event.getStatus().getDescription())
-                .organizer(event.getOrganizer().getName())
+                .organizer(event.getOrganizer() != null ? event.getOrganizer().getName() : null)
+                .attendance(List.of()) // Asumiendo que no se necesita asistencia al eliminar
             .build();
             service.delete(id);
             return ResponseEntity.ok(eventDTO);

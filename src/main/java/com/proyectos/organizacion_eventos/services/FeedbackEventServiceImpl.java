@@ -2,7 +2,6 @@ package com.proyectos.organizacion_eventos.services;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.proyectos.organizacion_eventos.dto.EventFeedbackDTO;
@@ -15,20 +14,19 @@ import com.proyectos.organizacion_eventos.repositories.EventRepository;
 import com.proyectos.organizacion_eventos.repositories.FeedbackEventRepository;
 import com.proyectos.organizacion_eventos.repositories.UserRepository;
 
+import lombok.RequiredArgsConstructor;
+
 @Service
+@RequiredArgsConstructor
 public class FeedbackEventServiceImpl implements FeedbackEventService {
 
-    @Autowired
-    private EventRepository eventRepository;
+    private final EventRepository eventRepository;
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
 
-    @Autowired
-    private FeedbackEventRepository repository;
+    private final FeedbackEventRepository repository;
 
-    @Autowired
-    private EventAttendanceRepository eventAttendanceRepository;
+    private final EventAttendanceRepository eventAttendanceRepository;
 
     @Override
     public void addFeedback(int eventId, int userId, String textFeedbackUser) {

@@ -64,7 +64,7 @@ public class Event {
     @ManyToMany(mappedBy = "events")
     private Set<Group> groups = new HashSet<>();
 
-    @OneToMany(mappedBy = "event")
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<FeedbackEvent> feedbacks = new ArrayList<>();;
     
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)

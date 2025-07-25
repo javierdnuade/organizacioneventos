@@ -3,7 +3,6 @@ package com.proyectos.organizacion_eventos.controllers;
 import java.util.Map;
 import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -15,18 +14,20 @@ import com.proyectos.organizacion_eventos.entities.Event;
 import com.proyectos.organizacion_eventos.services.EventAttendanceService;
 import com.proyectos.organizacion_eventos.services.EventService;
 
+import lombok.RequiredArgsConstructor;
+
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
 @RestController
 @RequestMapping("/api/event-attendance")
+@RequiredArgsConstructor
 public class EventAttendanceController {
 
-    @Autowired
-    private EventService eventService;
 
-    @Autowired
-    private EventAttendanceService service;
+    private final EventService eventService;
+
+    private final EventAttendanceService service;
 
     @PutMapping("/{eventId}/users/{userId}")
     public ResponseEntity<?> setAttendance (@PathVariable int eventId, @PathVariable int userId) {

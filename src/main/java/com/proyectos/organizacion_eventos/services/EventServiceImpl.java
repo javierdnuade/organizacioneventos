@@ -6,7 +6,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.StreamSupport;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,34 +23,40 @@ import com.proyectos.organizacion_eventos.repositories.EventRepository;
 import com.proyectos.organizacion_eventos.repositories.StatusRepository;
 import com.proyectos.organizacion_eventos.repositories.UserRepository;
 
+import lombok.RequiredArgsConstructor;
+
 @Service
+@RequiredArgsConstructor
 public class EventServiceImpl implements EventService{
 
-    @Autowired
-    private EventRepository repository;
+    private final EventRepository repository;
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
 
-    @Autowired
-    private StatusRepository statusRepository;
+    private final StatusRepository statusRepository;
 
-    @Autowired
-    private EventAttendanceRepository eventAttendanceRepository;
+    private final EventAttendanceRepository eventAttendanceRepository;
 
     @Transactional(readOnly = true)
     @Override
     public List<EventDTO> findAll() {
-        return StreamSupport.stream(repository.findAll().spliterator(), false)
-            .map(event -> EventDTO.builder()
+
+        return (List<EventDTO>) StreamSupport.stream(repository.findAll().spliterator(), false)
+            .map(event -> {
+                List<EventParticipantDTO> participants = repository.findParticipantsByEventId(event.getId());
+
+                return EventDTO.builder()
                 .id(event.getId())
                 .name(event.getName())
                 .description(event.getDescription())
                 .date(event.getDate())
                 .location(event.getLocation())
                 .status(event.getStatus().getDescription())
-                .organizer(event.getOrganizer().getName())
-                .build())
+                .organizer(event.getOrganizer() != null ? event.getOrganizer().getName() : null)
+                .attendance(participants)
+                .build();
+            })
+
             .toList();
     }
 
@@ -91,7 +96,7 @@ public class EventServiceImpl implements EventService{
             .date(event.getDate())
             .location(event.getLocation())
             .status(event.getStatus().getDescription())
-            .organizer(event.getOrganizer().getName())
+            .organizer(event.getOrganizer() != null ? event.getOrganizer().getName() : null)
             .attendance(participants)
             .build());
     }
@@ -207,7 +212,7 @@ public class EventServiceImpl implements EventService{
             .date(event.getDate())
             .location(event.getLocation())
             .status(event.getStatus().getDescription())
-            .organizer(event.getOrganizer().getName())
+            .organizer(event.getOrganizer() != null ? event.getOrganizer().getName() : null)
             .attendance(participants)
             .build());
     }

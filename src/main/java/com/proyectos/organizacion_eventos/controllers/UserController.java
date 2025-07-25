@@ -3,7 +3,6 @@ package com.proyectos.organizacion_eventos.controllers;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,13 +15,15 @@ import com.proyectos.organizacion_eventos.entities.Role;
 import com.proyectos.organizacion_eventos.entities.User;
 import com.proyectos.organizacion_eventos.services.UserService;
 
+import lombok.RequiredArgsConstructor;
+
 
 @RestController
 @RequestMapping("/api/users")
+@RequiredArgsConstructor
 public class UserController {
 
-    @Autowired
-    UserService service;
+    private final UserService service;
 
     @GetMapping
     public ResponseEntity<List<UserDTO>> listAll() {

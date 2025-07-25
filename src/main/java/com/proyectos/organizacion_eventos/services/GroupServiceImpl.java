@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,21 +21,19 @@ import com.proyectos.organizacion_eventos.repositories.GroupRepository;
 import com.proyectos.organizacion_eventos.repositories.GroupUserRepository;
 import com.proyectos.organizacion_eventos.repositories.UserRepository;
 
+import lombok.RequiredArgsConstructor;
 
 @Service
+@RequiredArgsConstructor
 public class GroupServiceImpl implements GroupService {
 
-    @Autowired
-    private EventRepository eventRepository;
+    private final EventRepository eventRepository;
 
-    @Autowired
-    private GroupUserRepository groupUserRepository;
+    private final GroupUserRepository groupUserRepository;
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
 
-    @Autowired
-    private GroupRepository repository;
+    private final GroupRepository repository;
 
     @Override
     @Transactional(readOnly = true)

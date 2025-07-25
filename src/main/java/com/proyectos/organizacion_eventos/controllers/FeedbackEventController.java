@@ -3,7 +3,6 @@ package com.proyectos.organizacion_eventos.controllers;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -22,22 +21,21 @@ import com.proyectos.organizacion_eventos.services.UserService;
 import com.proyectos.organizacion_eventos.utils.AuthOrganizerAndAdminEvent;
 
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 
 import org.springframework.web.bind.annotation.GetMapping;
 
 
 @RestController
 @RequestMapping("/api/feedback-events")
+@RequiredArgsConstructor
 public class FeedbackEventController {
 
-    @Autowired
-    private AuthOrganizerAndAdminEvent authOrganizerAndAdminEvent;
+    private final AuthOrganizerAndAdminEvent authOrganizerAndAdminEvent;
 
-    @Autowired
-    private UserService userService;
+    private final UserService userService;
 
-    @Autowired
-    private FeedbackEventService service;
+    private final FeedbackEventService service;
 
     @PostMapping("addFeedback/{eventId}")
     public ResponseEntity<?> addFeedback(@PathVariable int eventId, 
