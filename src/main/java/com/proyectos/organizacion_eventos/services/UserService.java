@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.proyectos.organizacion_eventos.dto.UserDTO;
+import com.proyectos.organizacion_eventos.dto.UserUpdateDTO;
 import com.proyectos.organizacion_eventos.entities.User;
 
 public interface UserService {
@@ -25,5 +26,7 @@ public interface UserService {
     Optional<UserDTO> findByIdDTO(int id);
 
     Optional<User> deleteById(int id);
+
+    Optional<User> update(UserUpdateDTO user, int id);
 
 }

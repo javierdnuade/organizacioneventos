@@ -42,7 +42,7 @@ public class Group {
         joinColumns = @JoinColumn(name = "group_id"),
         inverseJoinColumns = @JoinColumn(name = "event_id"),
         uniqueConstraints = @UniqueConstraint(columnNames = {"group_id", "event_id"}))
-    private Set<Event> events = new HashSet<>();;
+    private Set<Event> events = new HashSet<>();
 
     
     @OneToMany(mappedBy = "group", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)

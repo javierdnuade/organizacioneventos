@@ -1,6 +1,5 @@
 package com.proyectos.organizacion_eventos.dto;
 
-import java.util.List;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -17,5 +16,4 @@ public class UserDTO {
     private String username;
     private String name;
     private String email;
-    private List<String> roles;
 }

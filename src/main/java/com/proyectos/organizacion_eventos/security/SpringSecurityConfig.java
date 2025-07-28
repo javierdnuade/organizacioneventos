@@ -60,6 +60,7 @@ public class SpringSecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/api/events").hasAnyRole("ADMIN")
                 .requestMatchers(HttpMethod.POST, "/api/users").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.POST, "/api/groups").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/api/users/**").hasAnyRole("USER", "ADMIN")
                 .anyRequest().authenticated()
             )
             .exceptionHandling(ex -> ex.authenticationEntryPoint(unauthorizedHandler()))

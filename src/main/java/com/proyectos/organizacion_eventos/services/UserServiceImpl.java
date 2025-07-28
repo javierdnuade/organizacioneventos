@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.proyectos.organizacion_eventos.dto.UserDTO;
+import com.proyectos.organizacion_eventos.dto.UserUpdateDTO;
 import com.proyectos.organizacion_eventos.entities.Role;
 import com.proyectos.organizacion_eventos.entities.User;
 import com.proyectos.organizacion_eventos.repositories.EventAttendanceRepository;
@@ -35,7 +36,7 @@ public class UserServiceImpl implements UserService {
 
     private final RoleRepository roleRepository;
 
-    private final PasswordEncoder passwordEncoder;
+    private final PasswordEncoder passwordEncoder;  
 
     @Override
     public boolean existsByUsername(String username) {
@@ -74,12 +75,9 @@ public class UserServiceImpl implements UserService {
             .username(user.getUsername())
             .name(user.getName())
             .email(user.getEmail())
-            .roles(user.getRoles().stream()
-                .map(Role::getName)
-                .toList())
-            .build())        
+            .build())
         .toList();
-
+    
         // Retornamos la lista de UserDTO
         return userDTOs;
     }
@@ -150,9 +148,29 @@ public class UserServiceImpl implements UserService {
             .username(user.getUsername())
             .name(user.getName())
             .email(user.getEmail())
-            .roles(user.getRoles().stream()
-                .map(Role::getName)
-                .toList())
             .build());
         }
+
+    @Override
+    @Transactional
+    public Optional<User> update(UserUpdateDTO user, int id) {
+        return repository.findById(id)
+            .map(userExist -> {
+                if (user.getEmail() != null && !user.getEmail().isBlank()) {
+                    userExist.setEmail(user.getEmail());
+                }
+                if (user.getName() != null && !user.getName().isBlank()) {
+                    userExist.setName(user.getName());
+                }                
+                if (user.getUsername() != null && !user.getUsername().isBlank()) {
+                userExist.setUsername(user.getUsername());
+                }                
+                if (user.getPassword() != null && !user.getPassword().isEmpty()) {
+                    String encodedPassword = passwordEncoder.encode(user.getPassword());
+                    userExist.setPassword(encodedPassword); // Encriptamos la contraseña
+                }
+                return repository.save(userExist);
+            });
+
+    }
 }

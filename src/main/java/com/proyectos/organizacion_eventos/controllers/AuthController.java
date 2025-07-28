@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.proyectos.organizacion_eventos.dto.UserDTO;
-import com.proyectos.organizacion_eventos.entities.Role;
 import com.proyectos.organizacion_eventos.entities.User;
 import com.proyectos.organizacion_eventos.repositories.UserRepository;
 import com.proyectos.organizacion_eventos.security.JwtUtil;
@@ -57,7 +56,6 @@ public class AuthController {
                 .username(created.getUsername())
                 .name(created.getName())
                 .email(created.getEmail())
-                .roles(created.getRoles().stream().map(Role::getName).toList())
             .build();
             return ResponseEntity.status(HttpStatus.CREATED).body(dto);
         } catch (IllegalArgumentException e) {

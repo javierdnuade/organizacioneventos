@@ -21,9 +21,11 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
 import jakarta.persistence.UniqueConstraint;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 
 
@@ -31,6 +33,7 @@ import lombok.Data;
 @Table(name = "users")
 @AllArgsConstructor
 @Data
+@Builder
 public class User {
 
 
@@ -44,14 +47,17 @@ public class User {
     private String username;
 
     @NotBlank(message = "La contraseña es obligatoria")
+    @Size(min = 4, max=60)
     @Column(nullable = false)
     private String password;
 
     @NotBlank(message = "El nombre es obligatorio")
+    @Size(min = 2, max = 60)
     @Column(nullable = false)
     private String name;
 
     @NotBlank(message = "El email es obligatorio")
+    @Email(message = "Debe ser un email válido")
     @Column(unique = true, nullable = false)
     private String email;
     
