@@ -22,6 +22,7 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -41,6 +42,7 @@ public class Event {
     private int id;
 
     @NotBlank(message = "El nombre del evento es obligatorio")
+    @Size(min = 4, max = 60, message = "El nombre del evento debe tener entre 4 y 60 caracteres")
     @Column(nullable = false)
     private String name;
 

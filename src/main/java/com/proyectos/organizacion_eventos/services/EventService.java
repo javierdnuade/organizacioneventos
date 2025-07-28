@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.proyectos.organizacion_eventos.dto.EventDTO;
+import com.proyectos.organizacion_eventos.dto.EventUpdateDTO;
 import com.proyectos.organizacion_eventos.entities.Event;
 import com.proyectos.organizacion_eventos.entities.EventAttendance;
 
@@ -29,7 +30,5 @@ public interface EventService {
 
     Boolean isOrganizer(int eventId, String username);
 
-
-
-
+    Optional<Event> update (EventUpdateDTO event, int id);
 }

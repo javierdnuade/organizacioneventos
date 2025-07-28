@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.proyectos.organizacion_eventos.dto.EventDTO;
+import com.proyectos.organizacion_eventos.dto.EventUpdateDTO;
 import com.proyectos.organizacion_eventos.entities.Event;
 import com.proyectos.organizacion_eventos.entities.EventAttendance;
 import com.proyectos.organizacion_eventos.services.EventService;
@@ -26,6 +27,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.PutMapping;
+
 
 @RestController
 @RequestMapping("/api/events")
@@ -159,6 +162,40 @@ public class EventController {
         .map(ResponseEntity::ok)
         .orElse(ResponseEntity.notFound().build()); 
 
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<?> update(@Valid @RequestBody EventUpdateDTO eventUpdate, BindingResult result, @PathVariable int id) {
+        
+        // Validamos que solo el organizador o administrador pueda actualizar el evento
+        ResponseEntity<?> validation = authOrganizerAndAdminEvent.validationAdminOrOrganizer(id);
+        if (validation != null) {
+            return validation;
+        }
+
+        // Validación de errores en campos
+        ResponseEntity<?> errors = ControllerUtils.getErrorsResponse(result);
+        if (errors != null) {
+            return errors;
+        }
+
+        Optional<Event> eventOpt = service.update(eventUpdate, id);
+        if (eventOpt.isPresent()) {
+            Event updatedEvent = eventOpt.get();
+            EventDTO dto = EventDTO.builder()
+                .id(updatedEvent.getId())
+                .name(updatedEvent.getName())
+                .description(updatedEvent.getDescription())
+                .date(updatedEvent.getDate())
+                .location(updatedEvent.getLocation())
+                .status(updatedEvent.getStatus().getDescription())
+                .organizer(updatedEvent.getOrganizer() != null ? updatedEvent.getOrganizer().getName() : null)
+                .attendance(List.of())
+            .build();
+            return ResponseEntity.ok(dto);
+        }
+
+        return ResponseEntity.notFound().build();
     }
     
 }

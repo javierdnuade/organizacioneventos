@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.proyectos.organizacion_eventos.dto.EventDTO;
 import com.proyectos.organizacion_eventos.dto.EventParticipantDTO;
+import com.proyectos.organizacion_eventos.dto.EventUpdateDTO;
 import com.proyectos.organizacion_eventos.entities.Event;
 import com.proyectos.organizacion_eventos.entities.EventAttendance;
 import com.proyectos.organizacion_eventos.entities.Group;
@@ -231,5 +232,33 @@ public class EventServiceImpl implements EventService{
             return null; // Evento sin organizador
         }
         return organizer.getUsername().equals(username);
+    }
+
+    @Override
+    public Optional<Event> update(EventUpdateDTO event, int id) {
+        return repository.findById(id)
+            .map(eventExist -> {
+                if (event.getName() != null && !event.getName().isBlank()) {
+                    eventExist.setName(event.getName());
+                }
+                if (event.getDescription() != null && !event.getDescription().isBlank()) {
+                    eventExist.setDescription(event.getDescription());
+                }
+                if (event.getDate() != null) {
+                    if (event.getDate().isBefore(LocalDateTime.now())) {
+                        throw new IllegalArgumentException("La fecha del evento debe ser en el futuro");
+                    }
+                    eventExist.setDate(event.getDate());
+                }
+                if (event.getLocation() != null && !event.getLocation().isBlank()) {
+                    eventExist.setLocation(event.getLocation());
+                }
+                if (event.getStatus() != null) {
+                    Optional<Status> status = statusRepository.findById(event.getStatus());
+                    if (status.isPresent())
+                    eventExist.setStatus(status.get());
+                }
+                return repository.save(eventExist);
+            });
     }
 }

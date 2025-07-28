@@ -83,11 +83,11 @@ public class UserController {
         String currentUsername = auth.getName();
 
         Optional<User> userCheckOpt = service.findByUsername(currentUsername);
+        // Validamos que el usuario que se quiere actualizar sea el mismo que está autenticado
         if (userCheckOpt.isPresent()) {
             User userCheck = userCheckOpt.get();
-            System.out.println("ID del usuario autenticado: " + userCheck.getId());
-            System.out.println("ID enviado por URL: " + id);
 
+            // Si no es el mismo usuario, devolvemos un error 403 Forbidden
             if (userCheck.getId() != id) {
                 return ResponseEntity.status(403).body(Map.of("error", "No puedes actualizar otro usuario que no sea el tuyo"));
             }
