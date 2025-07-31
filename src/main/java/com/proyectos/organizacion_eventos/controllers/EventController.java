@@ -1,7 +1,6 @@
 package com.proyectos.organizacion_eventos.controllers;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.http.HttpStatus;
@@ -12,9 +11,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.proyectos.organizacion_eventos.dto.EventDTO;
+import com.proyectos.organizacion_eventos.dto.EventMemberResponseDTO;
 import com.proyectos.organizacion_eventos.dto.EventUpdateDTO;
 import com.proyectos.organizacion_eventos.entities.Event;
-import com.proyectos.organizacion_eventos.entities.EventAttendance;
 import com.proyectos.organizacion_eventos.services.EventService;
 import com.proyectos.organizacion_eventos.utils.AuthOrganizerAndAdminEvent;
 import com.proyectos.organizacion_eventos.utils.ControllerUtils;
@@ -65,22 +64,19 @@ public class EventController {
             return errors;
         }
 
-        try {
-            Event created = service.save(event);
-            // Convertimos el evento a DTO para imprimirlo
-            EventDTO dto = EventDTO.builder()
-                .id(created.getId())
-                .name(created.getName())
-                .description(created.getDescription())
-                .date(created.getDate())
-                .location(created.getLocation())
-                .status(created.getStatus().getDescription())
-                .organizer(created.getOrganizer().getName())
-            .build();
-            return ResponseEntity.status(HttpStatus.CREATED).body(dto);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
-        }
+        Event created = service.save(event);
+        // Convertimos el evento a DTO para imprimirlo
+        EventDTO dto = EventDTO.builder()
+            .id(created.getId())
+            .name(created.getName())
+            .description(created.getDescription())
+            .date(created.getDate())
+            .location(created.getLocation())
+            .status(created.getStatus().getDescription())
+            .organizer(created.getOrganizer().getName())
+        .build();
+        return ResponseEntity.status(HttpStatus.CREATED).body(dto);
+
     }
 
     @GetMapping("/status/{status}")
@@ -123,13 +119,10 @@ public class EventController {
             return validation;
         }
 
-        Optional<String> errorResult = service.addMember(id, userId);
-        if (errorResult.isPresent()) {
-            return ResponseEntity.badRequest().body(Map.of("error", errorResult.get()));
-        }
-        return ResponseEntity.ok(Map.of("mensaje", "Usuario agregado al evento correctamente"));
+        EventMemberResponseDTO memberResponse = service.addMember(id, userId);
+        return ResponseEntity.ok(memberResponse);
     }
-
+    
     @DeleteMapping("/{id}/removeMember/{userId}")
     public ResponseEntity<?> removeMember (
         @PathVariable int id,
@@ -140,13 +133,8 @@ public class EventController {
             return validation;
         }
 
-        Optional <EventAttendance> result = service.removeMember(id, userId);
-        if (result.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(Map.of("error", "El usuario no estaba inscrito en el evento"));
-        }
-
-        return ResponseEntity.ok(Map.of("mensaje", "Usuario removido del evento correctamente"));
+        EventMemberResponseDTO memberResponse  = service.removeMember(id, userId);
+        return ResponseEntity.ok(memberResponse);
     }
 
 

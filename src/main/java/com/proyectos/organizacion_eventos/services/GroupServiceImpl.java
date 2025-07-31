@@ -16,6 +16,8 @@ import com.proyectos.organizacion_eventos.entities.Group;
 import com.proyectos.organizacion_eventos.entities.GroupUser;
 import com.proyectos.organizacion_eventos.entities.User;
 import com.proyectos.organizacion_eventos.entities.embeddable.GroupUserId;
+import com.proyectos.organizacion_eventos.exceptions.AlreadyExistsException;
+import com.proyectos.organizacion_eventos.exceptions.NotFoundException;
 import com.proyectos.organizacion_eventos.repositories.EventRepository;
 import com.proyectos.organizacion_eventos.repositories.GroupRepository;
 import com.proyectos.organizacion_eventos.repositories.GroupUserRepository;
@@ -113,16 +115,16 @@ public class GroupServiceImpl implements GroupService {
     @Override
     public void addMember(int grupoId, int userId, boolean isLeader) {
         Group group = repository.findById(grupoId)
-            .orElseThrow(() -> new RuntimeException("Grupo no encontrado"));
+            .orElseThrow(() -> new NotFoundException("P-501","Grupo no encontrado"));
 
         User user = userRepository.findById(userId)
-            .orElseThrow( () -> new RuntimeException("Usuario no encontrado"));
+            .orElseThrow( () -> new NotFoundException("P-500","Usuario no encontrado"));
 
         GroupUserId groupUserId = new GroupUserId(grupoId, userId);
 
         // Evitamos duplicados en la logica de negocio
         if (groupUserRepository.existsById(groupUserId)) {
-            throw new RuntimeException("El usuario ya es miembro del grupo");
+            throw new AlreadyExistsException("P-400","El usuario ya es miembro del grupo");
         }
 
         GroupUser groupUser = new GroupUser(groupUserId, group, user, isLeader);

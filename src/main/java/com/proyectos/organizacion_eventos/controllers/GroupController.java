@@ -99,7 +99,6 @@ public class GroupController {
 
         // Manejamos errores por si no existe uno o otro
         
-        try {
 
             // Validacion si es lider o admin, llamamos a la clase authLeaderAdmin para validar
             ResponseEntity<?> validation = authLeaderAdmin.validationAdminOrLeader(groupId);
@@ -116,17 +115,6 @@ public class GroupController {
                 "usuario", userName,
                 "grupo", groupName
             ));
-        } catch (RuntimeException e) {
-            // Manejamos los errores que se tiran desde el Service
-
-            if (e.getMessage().contains("Grupo no encontrado") || e.getMessage().contains("Usuario no encontrado")) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
-            }
-            if (e.getMessage().contains("ya es miembro")) {
-                return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", e.getMessage()));
-            }
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", e.getMessage()));
-        }   
     }
 
     @DeleteMapping("/{groupId}/members/{userId}")

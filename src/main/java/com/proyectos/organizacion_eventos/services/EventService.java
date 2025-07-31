@@ -4,9 +4,9 @@ import java.util.List;
 import java.util.Optional;
 
 import com.proyectos.organizacion_eventos.dto.EventDTO;
+import com.proyectos.organizacion_eventos.dto.EventMemberResponseDTO;
 import com.proyectos.organizacion_eventos.dto.EventUpdateDTO;
 import com.proyectos.organizacion_eventos.entities.Event;
-import com.proyectos.organizacion_eventos.entities.EventAttendance;
 
 public interface EventService {
 
@@ -22,9 +22,9 @@ public interface EventService {
 
     Optional<Event> delete(int id);
 
-    Optional<String> addMember(int eventId, int userId);
+    EventMemberResponseDTO addMember(int eventId, int userId);
 
-    Optional<EventAttendance> removeMember(int eventId, int userId);
+    EventMemberResponseDTO removeMember(int eventId, int userId);
 
     Optional<EventDTO> getParticipationForEventDTO(int id, boolean attendance);
 

@@ -1,6 +1,7 @@
 package com.proyectos.organizacion_eventos.services;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.proyectos.organizacion_eventos.dto.EventDTO;
+import com.proyectos.organizacion_eventos.dto.EventMemberResponseDTO;
 import com.proyectos.organizacion_eventos.dto.EventParticipantDTO;
 import com.proyectos.organizacion_eventos.dto.EventUpdateDTO;
 import com.proyectos.organizacion_eventos.entities.Event;
@@ -19,6 +21,9 @@ import com.proyectos.organizacion_eventos.entities.GroupUser;
 import com.proyectos.organizacion_eventos.entities.Status;
 import com.proyectos.organizacion_eventos.entities.User;
 import com.proyectos.organizacion_eventos.entities.embeddable.EventUserId;
+import com.proyectos.organizacion_eventos.exceptions.AlreadyExistsException;
+import com.proyectos.organizacion_eventos.exceptions.BadRequestException;
+import com.proyectos.organizacion_eventos.exceptions.NotFoundException;
 import com.proyectos.organizacion_eventos.repositories.EventAttendanceRepository;
 import com.proyectos.organizacion_eventos.repositories.EventRepository;
 import com.proyectos.organizacion_eventos.repositories.StatusRepository;
@@ -64,15 +69,15 @@ public class EventServiceImpl implements EventService{
     @Override
     @Transactional
     public Event save(Event event) {
-        if (event.getDate().isBefore(LocalDateTime.now())) {
-            throw new IllegalArgumentException("La fecha del evento debe ser futura");
+        if (event.getDate() != null && event.getDate().isBefore(LocalDateTime.now())) {
+            throw new BadRequestException("P-603", "La fecha del evento debe ser futura si se proporciona");
         }
 
         User organizer = userRepository.findById(event.getOrganizer().getId())
-            .orElseThrow(() -> new IllegalArgumentException("Organizador no válido"));
+            .orElseThrow(() -> new BadRequestException("P-602","Organizador no válido"));
 
         Status status = statusRepository.findById(event.getStatus().getId())
-            .orElseThrow(() -> new IllegalArgumentException("Status no encontrado"));
+            .orElseThrow(() -> new BadRequestException("P-605","Status no encontrado"));
 
         event.setOrganizer(organizer);
         event.setStatus(status);
@@ -118,7 +123,7 @@ public class EventServiceImpl implements EventService{
             string.equalsIgnoreCase("Finalizado") ||
             string.equalsIgnoreCase("Proximamente"))) {
             
-                throw new IllegalArgumentException("El estado no puede ser nulo o diferente a los existentes");
+                throw new BadRequestException("P-605","El estado solicitado no puede ser nulo o diferente a los existentes");
 
         }
         // Filtrar eventos por estado
@@ -147,20 +152,17 @@ public class EventServiceImpl implements EventService{
 
     @Override
     @Transactional
-    public Optional<String> addMember(int eventId, int userId) {
-       
-        Optional<Event> eventOpt = repository.findById(eventId);
-        if (eventOpt.isEmpty()) return Optional.of("Evento no encontrado");
+    public EventMemberResponseDTO addMember(int eventId, int userId) {
 
-        Optional<User> userOpt = userRepository.findById(userId);
-        if (userOpt.isEmpty()) return Optional.of("Usuario no encontrado");
+        Event event = repository.findById(eventId)
+            .orElseThrow(() -> new NotFoundException("P-501","Evento no encontrado"));
 
-        Event event = eventOpt.get();
-        User user = userOpt.get();
+        User user = userRepository.findById(userId)
+            .orElseThrow( () -> new NotFoundException("P-500","Usuario no encontrado"));
 
         EventUserId eventUserId = new EventUserId(eventId, userId);
         if (eventAttendanceRepository.existsById(eventUserId)) {
-            return Optional.of("El usuario ya está inscrito en el evento");
+            throw new AlreadyExistsException("P-401","El usuario ya participa del evento");
         }
 
         // Validamos que el usuario este dentro de algun grupo del evento
@@ -174,27 +176,47 @@ public class EventServiceImpl implements EventService{
             .anyMatch(groups::contains);
 
         if (!pertenece) {
-            return Optional.of("El usuario no pertenece a ningun grupo del evento");
+            throw new BadRequestException("P-610","El usuario no pertenece a ningun grupo del evento");
         }
             
         // Creamos la asistencia al evento
         EventAttendance attendance = new EventAttendance(eventUserId, event, user, false);
         // Guardamos la asistencia
         eventAttendanceRepository.save(attendance);
-        return Optional.empty(); // No hay error, por lo que retornamos un Optional vacío
+        return EventMemberResponseDTO.builder()
+            .userName(user.getUsername())
+            .eventName(event.getName())
+            .eventDate(event.getDate() != null ? event.getDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")) : "Sin definir")
+            .location(event.getLocation() != null ? event.getLocation() : "Sin definir")
+            .build();
+            //                 .organizer(event.getOrganizer() != null ? event.getOrganizer().getName() : null)
+
     }
 
     @Override
     @Transactional
-    public Optional<EventAttendance> removeMember(int eventId, int userId) {
+    public EventMemberResponseDTO removeMember(int eventId, int userId) {
+
+        Event event = repository.findById(eventId)
+            .orElseThrow(() -> new NotFoundException("P-501","Evento no encontrado"));
+
+        User user = userRepository.findById(userId)
+            .orElseThrow( () -> new NotFoundException("P-500","Usuario no encontrado"));
 
         // Validamos que esté inscrito en el evento
         EventUserId id = new EventUserId(eventId, userId);
-        Optional<EventAttendance> attendanceOptional = eventAttendanceRepository.findById(id);
-        attendanceOptional.ifPresent( att -> {
-            eventAttendanceRepository.delete(att);
-        });
-        return attendanceOptional;
+
+        EventAttendance attendanceOptional = eventAttendanceRepository.findById(id)
+            .orElseThrow( () -> new NotFoundException("P-505", "El usuario no está inscrito en el evento"));
+        // Eliminamos la asistencia
+        eventAttendanceRepository.delete(attendanceOptional);
+
+        return EventMemberResponseDTO.builder()
+            .userName(user.getUsername())
+            .eventName(event.getName())
+            .eventDate(event.getDate() != null ? attendanceOptional.getEvent().getDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")) : "Sin definir")
+            .location(event.getLocation() != null ? attendanceOptional.getEvent().getLocation() : "Sin definir")
+            .build();
     }
 
     @Override
@@ -238,25 +260,23 @@ public class EventServiceImpl implements EventService{
     public Optional<Event> update(EventUpdateDTO event, int id) {
         return repository.findById(id)
             .map(eventExist -> {
-                if (event.getName() != null && !event.getName().isBlank()) {
+                if (event.getName() != null && !event.getName().isBlank()) { // Si no es nulo y no viene en blanco, lo setea
                     eventExist.setName(event.getName());
                 }
-                if (event.getDescription() != null && !event.getDescription().isBlank()) {
+                if (event.getDescription() != null && !event.getDescription().isBlank()) { // Si no es nulo y no viene en blanco, lo setea
                     eventExist.setDescription(event.getDescription());
                 }
-                if (event.getDate() != null) {
-                    if (event.getDate().isBefore(LocalDateTime.now())) {
-                        throw new IllegalArgumentException("La fecha del evento debe ser en el futuro");
-                    }
+                if (event.getDate() != null && event.getDate().isAfter(LocalDateTime.now())) { // Si no es nulo y la fecha es futura, lo setea
                     eventExist.setDate(event.getDate());
                 }
-                if (event.getLocation() != null && !event.getLocation().isBlank()) {
+                if (event.getLocation() != null && !event.getLocation().isBlank()) { // Si no es nulo y no es blanco, lo setea
                     eventExist.setLocation(event.getLocation());
                 }
-                if (event.getStatus() != null) {
-                    Optional<Status> status = statusRepository.findById(event.getStatus());
-                    if (status.isPresent())
-                    eventExist.setStatus(status.get());
+                if (event.getStatus() != null) { // Si no es nulo, se fija si existe
+                    Optional<Status> status = statusRepository.findById(event.getStatus()); // Si existe, lo setea
+                    if (status.isPresent()) {
+                        eventExist.setStatus(status.get());
+                    }
                 }
                 return repository.save(eventExist);
             });
