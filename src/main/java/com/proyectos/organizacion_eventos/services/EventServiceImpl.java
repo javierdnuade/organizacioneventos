@@ -87,24 +87,21 @@ public class EventServiceImpl implements EventService{
 
     @Transactional(readOnly = true)
     @Override
-    public Optional<EventDTO> getEventDTO(int id) {
-        Optional<Event> eventOptional = repository.findById(id);
-        if (eventOptional.isEmpty()) {
-            return Optional.empty();
-        }
-
-        Event event = eventOptional.get();
+    public EventDTO getEventDTO(int id) {
+        Event event = repository.findById(id)
+            .orElseThrow( () -> new NotFoundException("P-501","Evento no encontrado"));
+        
         List<EventParticipantDTO> participants = repository.findParticipantsByEventId(id);
-        return Optional.of(EventDTO.builder()
-            .id(event.getId())
-            .name(event.getName())
-            .description(event.getDescription())
-            .date(event.getDate())
-            .location(event.getLocation())
-            .status(event.getStatus().getDescription())
-            .organizer(event.getOrganizer() != null ? event.getOrganizer().getName() : null)
-            .attendance(participants)
-            .build());
+        return EventDTO.builder()
+                .id(event.getId())
+                .name(event.getName())
+                .description(event.getDescription())
+                .date(event.getDate())
+                .location(event.getLocation())
+                .status(event.getStatus().getDescription())
+                .organizer(event.getOrganizer() != null ? event.getOrganizer().getName() : null)
+                .attendance(participants)
+            .build();
     }
 
     @Transactional(readOnly = true)
@@ -134,21 +131,31 @@ public class EventServiceImpl implements EventService{
 
     @Override
     @Transactional
-    public Optional<Event> delete(int id) {
-        Optional<Event> eventOptional = repository.findById(id);
-        eventOptional.ifPresent(event -> {
-            // Se eliminan las relaciones existentes en la tabla intermedia con los grupos para que no haya problemas de eliminacion de claves foraneas
-            event.clearGroups();
+    public EventDTO delete(int id) {
+        Event event = repository.findById(id)
+            .orElseThrow( () -> new NotFoundException("P-501","Evento no encontrado"));
+        // Se eliminan las relaciones existentes en la tabla intermedia con los grupos para que no haya problemas de eliminacion de claves foraneas
+        event.clearGroups();
 
-            // Hacemos un save del evento con las relaciones borradas para que Hibernate pueda hacer el borrado bien
-            repository.save(event);  // para sincronizar las relaciones
-            repository.flush();
+        // Hacemos un save del evento con las relaciones borradas para que Hibernate pueda hacer el borrado bien
+        repository.save(event);  // para sincronizar las relaciones
+        repository.flush();
 
-            // Borramos el evento
-            repository.delete(event);
-        });
-        return eventOptional;
-    }
+        // Borramos el evento
+        repository.delete(event);
+        
+        // Convertir a DTO para retornar
+        return EventDTO.builder()
+            .id(event.getId())
+            .name(event.getName())
+            .description(event.getDescription())
+            .date(event.getDate())
+            .location(event.getLocation())
+            .status(event.getStatus().getDescription())
+            .organizer(event.getOrganizer() != null ? event.getOrganizer().getName() : null)
+            .attendance(List.of()) // como está eliminado, asumimos sin asistentes
+            .build();    
+        }
 
     @Override
     @Transactional

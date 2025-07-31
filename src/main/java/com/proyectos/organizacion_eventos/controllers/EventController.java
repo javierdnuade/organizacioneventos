@@ -49,9 +49,8 @@ public class EventController {
 
     @GetMapping("/{id}")
     public ResponseEntity<EventDTO> showEvent (@PathVariable int id) {
-        return service.getEventDTO(id)
-            .map(ResponseEntity::ok)
-            .orElse(ResponseEntity.notFound().build()); 
+        EventDTO dto = service.getEventDTO(id);
+        return ResponseEntity.ok(dto);
 
     }
 
@@ -90,24 +89,10 @@ public class EventController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteEvent (@PathVariable int id) {
-        Optional<Event> eventOptional = service.findById(id);
-        if (eventOptional.isPresent()) {
-            Event event = eventOptional.get();
-            EventDTO eventDTO = EventDTO.builder()
-                .id(event.getId())
-                .name(event.getName())
-                .description(event.getDescription())
-                .date(event.getDate())
-                .location(event.getLocation())
-                .status(event.getStatus().getDescription())
-                .organizer(event.getOrganizer() != null ? event.getOrganizer().getName() : null)
-                .attendance(List.of()) // Asumiendo que no se necesita asistencia al eliminar
-            .build();
-            service.delete(id);
-            return ResponseEntity.ok(eventDTO);
-        }
-        return ResponseEntity.notFound().build();
+        EventDTO deletedEvent = service.delete(id);
+        return ResponseEntity.ok(deletedEvent);
     }
+    
 
     @PostMapping("/{id}/addMember/{userId}")    
     public ResponseEntity<?> addMember(

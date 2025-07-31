@@ -14,13 +14,13 @@ public interface EventService {
 
     Event save(Event event);
 
-    Optional<EventDTO> getEventDTO(int id);
+    EventDTO getEventDTO(int id);
 
     Optional<Event> findById(int id);
 
     List<EventDTO> findByStatus(String status);
 
-    Optional<Event> delete(int id);
+    EventDTO delete(int id);
 
     EventMemberResponseDTO addMember(int eventId, int userId);
 
