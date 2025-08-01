@@ -227,24 +227,21 @@ public class EventServiceImpl implements EventService{
     }
 
     @Override
-    public Optional<EventDTO> getParticipationForEventDTO(int id, boolean attendance) {
-        Optional<Event> eventOptional = repository.findById(id);
-        if (eventOptional.isEmpty()) {
-            return Optional.empty();
-        }
+    public EventDTO getParticipationForEventDTO(int id, boolean attendance) {
+        Event event = repository.findById(id)
+            .orElseThrow(() -> new NotFoundException("P-501","Evento no encontrado"));
 
-        Event event = eventOptional.get();
         List<EventParticipantDTO> participants = repository.findParticipantsByAttended(id, attendance);
-        return Optional.of(EventDTO.builder()
-            .id(event.getId())
-            .name(event.getName())
-            .description(event.getDescription())
-            .date(event.getDate())
-            .location(event.getLocation())
-            .status(event.getStatus().getDescription())
-            .organizer(event.getOrganizer() != null ? event.getOrganizer().getName() : null)
-            .attendance(participants)
-            .build());
+        return EventDTO.builder()
+                .id(event.getId())
+                .name(event.getName())
+                .description(event.getDescription())
+                .date(event.getDate())
+                .location(event.getLocation())
+                .status(event.getStatus().getDescription())
+                .organizer(event.getOrganizer() != null ? event.getOrganizer().getName() : null)
+                .attendance(participants)
+            .build();
     }
 
     @Override
@@ -264,28 +261,38 @@ public class EventServiceImpl implements EventService{
     }
 
     @Override
-    public Optional<Event> update(EventUpdateDTO event, int id) {
-        return repository.findById(id)
-            .map(eventExist -> {
-                if (event.getName() != null && !event.getName().isBlank()) { // Si no es nulo y no viene en blanco, lo setea
-                    eventExist.setName(event.getName());
-                }
-                if (event.getDescription() != null && !event.getDescription().isBlank()) { // Si no es nulo y no viene en blanco, lo setea
-                    eventExist.setDescription(event.getDescription());
-                }
-                if (event.getDate() != null && event.getDate().isAfter(LocalDateTime.now())) { // Si no es nulo y la fecha es futura, lo setea
-                    eventExist.setDate(event.getDate());
-                }
-                if (event.getLocation() != null && !event.getLocation().isBlank()) { // Si no es nulo y no es blanco, lo setea
-                    eventExist.setLocation(event.getLocation());
-                }
-                if (event.getStatus() != null) { // Si no es nulo, se fija si existe
-                    Optional<Status> status = statusRepository.findById(event.getStatus()); // Si existe, lo setea
-                    if (status.isPresent()) {
-                        eventExist.setStatus(status.get());
-                    }
-                }
-                return repository.save(eventExist);
-            });
+    public EventDTO update(EventUpdateDTO event, int id) {
+    Event eventExist = repository.findById(id)
+        .orElseThrow(() -> new NotFoundException("P-501", "Evento no encontrado"));
+
+    if (event.getName() != null && !event.getName().isBlank()) {
+        eventExist.setName(event.getName());
+    }
+    if (event.getDescription() != null && !event.getDescription().isBlank()) {
+        eventExist.setDescription(event.getDescription());
+    }
+    if (event.getDate() != null && event.getDate().isAfter(LocalDateTime.now())) {
+        eventExist.setDate(event.getDate());
+    }
+    if (event.getLocation() != null && !event.getLocation().isBlank()) {
+        eventExist.setLocation(event.getLocation());
+    }
+    if (event.getStatus() != null) {
+        Optional<Status> status = statusRepository.findById(event.getStatus());
+        status.ifPresent(eventExist::setStatus);
+    }
+
+    Event updatedEvent = repository.save(eventExist);
+
+    return EventDTO.builder()
+            .id(updatedEvent.getId())
+            .name(updatedEvent.getName())
+            .description(updatedEvent.getDescription())
+            .date(updatedEvent.getDate())
+            .location(updatedEvent.getLocation())
+            .status(updatedEvent.getStatus().getDescription())
+            .organizer(updatedEvent.getOrganizer() != null ? updatedEvent.getOrganizer().getName() : null)
+            .attendance(List.of())
+        .build();
     }
 }

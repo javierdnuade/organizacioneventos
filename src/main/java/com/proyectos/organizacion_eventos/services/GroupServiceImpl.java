@@ -10,7 +10,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.proyectos.organizacion_eventos.dto.GroupDTO;
+import com.proyectos.organizacion_eventos.dto.GroupEventResponseDTO;
 import com.proyectos.organizacion_eventos.dto.GroupMemberDTO;
+import com.proyectos.organizacion_eventos.dto.GroupMemberResponseDTO;
 import com.proyectos.organizacion_eventos.entities.Event;
 import com.proyectos.organizacion_eventos.entities.Group;
 import com.proyectos.organizacion_eventos.entities.GroupUser;
@@ -90,6 +92,7 @@ public class GroupServiceImpl implements GroupService {
 
 
     @Override
+    @Transactional
     public Group save(Group group) {
         return repository.save(group);
     }
@@ -100,20 +103,23 @@ public class GroupServiceImpl implements GroupService {
     }
 
     @Override
-    public Optional<Group> delete(int id) {
-        Optional<Group> groupOptional = repository.findById(id);
+    @Transactional
+    public GroupDTO delete(int id) {
+        Group group = repository.findById(id)
+            .orElseThrow(() -> new NotFoundException("P-502","Grupo no encontrado"));
 
-        if (groupOptional.isPresent()) {
-            Group group = groupOptional.get();
-            repository.delete(group);
-            return groupOptional; // Retornamos el grupo eliminado
-        }
-        // Si no se encuentra el grupo, retornamos un Optional vacío
-        return groupOptional;
+
+        repository.delete(group);
+        return GroupDTO.builder()
+            .id(group.getId())
+            .name(group.getName())
+            .members(new ArrayList<>()) // No hay miembros al eliminar el grupo
+            .build();
     }
 
     @Override
-    public void addMember(int grupoId, int userId, boolean isLeader) {
+    @Transactional
+    public GroupMemberResponseDTO addMember(int grupoId, int userId, boolean isLeader) {
         Group group = repository.findById(grupoId)
             .orElseThrow(() -> new NotFoundException("P-501","Grupo no encontrado"));
 
@@ -129,59 +135,83 @@ public class GroupServiceImpl implements GroupService {
 
         GroupUser groupUser = new GroupUser(groupUserId, group, user, isLeader);
         groupUserRepository.save(groupUser);
+        return GroupMemberResponseDTO.builder()
+            .groupName(group.getName())
+            .userName(user.getName())
+            .isLeader(isLeader)
+        .build();
     }
 
     @Override
-    public Optional<GroupUser> removeMember(int groupId, int userId) {
+    @Transactional
+    public GroupMemberResponseDTO removeMember(int groupId, int userId) {
+
+        Group group = repository.findById(groupId)
+            .orElseThrow(() -> new NotFoundException("P-501","Grupo no encontrado"));
+
+        User user = userRepository.findById(userId)
+            .orElseThrow( () -> new NotFoundException("P-500","Usuario no encontrado"));
 
         GroupUserId groupUserId = new GroupUserId(groupId, userId);
-        Optional<GroupUser> groupUserOptional = groupUserRepository.findById(groupUserId);
-        groupUserOptional.ifPresent(groupUser -> {
-            groupUserRepository.delete(groupUser);
-        });
-
-        return groupUserOptional;
+        GroupUser groupUser = groupUserRepository.findById(groupUserId)
+            .orElseThrow( () -> new NotFoundException("P-505","Usuario no encontrado en el grupo"));
+        
+        groupUserRepository.delete(groupUser);
+        return GroupMemberResponseDTO.builder()
+            .groupName(user.getName())
+            .userName(group.getName())
+            .isLeader(groupUser.isLeader())
+        .build();
     }
 
     @Override
     public boolean isLeader(int groupId, String username) {
-        Optional<User> userOpt = userRepository.findByUsername(username);
-        if (userOpt.isEmpty()) {
-            return false;
-        }
-        GroupUserId groupUserId = new GroupUserId(groupId, userOpt.get().getId());
+        User user = userRepository.findByUsername(username)
+            .orElseThrow( () -> new NotFoundException("P-500","Usuario no encontrado"));
+        
+        GroupUserId groupUserId = new GroupUserId(groupId, user.getId());
         return groupUserRepository.findById(groupUserId)
             .map(GroupUser::isLeader)
             .orElse(false);    
     }
 
     @Override
-    public Optional<GroupUser> modifyLeader(int groupId, int userId, boolean leader) {
+    @Transactional
+    public GroupMemberResponseDTO modifyLeader(int groupId, int userId, boolean leader) {
+
+        Group group = repository.findById(groupId)
+            .orElseThrow(() -> new NotFoundException("P-501","Grupo no encontrado"));
+
+        User user = userRepository.findById(userId)
+            .orElseThrow( () -> new NotFoundException("P-500","Usuario no encontrado"));
 
         // Verificamos si el usuario es miembro del grupo.
 
         GroupUserId groupUserId = new GroupUserId(groupId, userId);
-        Optional<GroupUser> groupUser = groupUserRepository.findById(groupUserId);
-        groupUser.ifPresent(gr -> {
-            gr.setLeader(leader);
-            groupUserRepository.save(gr);
-        });
-        return groupUser;
+        GroupUser groupUser = groupUserRepository.findById(groupUserId)
+            .orElseThrow(() -> new NotFoundException("P-505","Usuario no encontrado en el grupo"));
+ 
+        groupUser.setLeader(leader);
+        groupUserRepository.save(groupUser);
+        
+        return GroupMemberResponseDTO.builder()
+            .groupName(group.getName())
+            .userName(user.getName())
+            .isLeader(leader)
+        .build();
     }
 
     @Override
-    public Optional<String> addEventToGroup(int groupId, int eventId) {
-        Optional<Group> groupOpt = repository.findById(groupId);
-        if (groupOpt.isEmpty()) return Optional.of("Evento no encontrado");
+    @Transactional
+    public GroupEventResponseDTO addEventToGroup(int groupId, int eventId) {
+        Group group = repository.findById(groupId)
+            .orElseThrow(() -> new NotFoundException("P-502","Grupo no encontrado"));
 
-        Optional<Event> eventOpt = eventRepository.findById(eventId);
-        if (eventOpt.isEmpty()) return Optional.of("Evento no encontrado");
-
-        Group group = groupOpt.get();
-        Event event = eventOpt.get();
+        Event event = eventRepository.findById(eventId)
+            .orElseThrow(() -> new NotFoundException("P-501","Grupo no encontrado"));
 
         if (group.getEvents().contains(event)) {
-            return Optional.of("El evento ya está asociado al grupo");
+            throw new AlreadyExistsException("P-402","El evento ya está asociado al grupo");
         }
 
         // Como es relacion bidireccional, agregamos tanto el evento al grupo como el grupo al evento
@@ -190,7 +220,33 @@ public class GroupServiceImpl implements GroupService {
         // Se guardan el evento y el grupo
         repository.save(group);
         
-        return Optional.empty(); // No hay error, por lo que retornamos un Optional vacío
+        return GroupEventResponseDTO.builder()
+            .groupName(group.getName())
+            .eventName(event.getName())
+        .build();
+    }
+
+    @Override
+    public GroupEventResponseDTO removeEventFromGroup(int groupId, int eventId) {
+        Group group = repository.findById(groupId)
+            .orElseThrow(() -> new NotFoundException("P-502","Grupo no encontrado"));
+
+        Event event = eventRepository.findById(eventId)
+            .orElseThrow(() -> new NotFoundException("P-501","Grupo no encontrado"));
+
+        if (!group.getEvents().contains(event)) {
+            throw new NotFoundException("P-506","El evento no está asociado al grupo");
+        }
+
+        group.removeEvent(event); // Dentro del metodo de group, se elimina el grupo del evento
+
+        // Se guardan el evento y el grupo
+        repository.save(group);
+
+        return GroupEventResponseDTO.builder()
+            .groupName(group.getName())
+            .eventName(event.getName())
+        .build();
     }
 
     

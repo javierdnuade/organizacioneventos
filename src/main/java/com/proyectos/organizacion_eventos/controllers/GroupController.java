@@ -2,7 +2,6 @@ package com.proyectos.organizacion_eventos.controllers;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,8 +11,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.proyectos.organizacion_eventos.dto.GroupDTO;
+import com.proyectos.organizacion_eventos.dto.GroupEventResponseDTO;
+import com.proyectos.organizacion_eventos.dto.GroupMemberResponseDTO;
 import com.proyectos.organizacion_eventos.entities.Group;
-import com.proyectos.organizacion_eventos.entities.GroupUser;
 import com.proyectos.organizacion_eventos.entities.User;
 import com.proyectos.organizacion_eventos.services.GroupService;
 import com.proyectos.organizacion_eventos.services.UserService;
@@ -78,16 +78,8 @@ public class GroupController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteGroup(@PathVariable int id) {
-        Optional<Group> groupOptional = service.delete(id);
-        if (groupOptional.isPresent()) {
-            Group group = groupOptional.get();
-            GroupDTO dto = GroupDTO.builder()   
-                .id(group.getId())
-                .name(group.getName())
-            .build();
-            return ResponseEntity.ok(dto);
-        }
-        return ResponseEntity.notFound().build();
+        GroupDTO deletedGroup = service.delete(id);
+        return ResponseEntity.ok(deletedGroup);
     }
 
     @PostMapping("/{groupId}/members/{userId}")
@@ -128,15 +120,8 @@ public class GroupController {
             return validation;
         }
 
-        Optional<GroupUser> groupUserOpt = service.removeMember(groupId, userId);
-        if (groupUserOpt.isPresent()) {
-            String userName = groupUserOpt.get().getUser().getName();
-            String groupName = groupUserOpt.get().getGroup().getName();
-            return ResponseEntity.ok(Map.of(
-            "mensaje", "El usuario " + userName + " fue eliminado del grupo " + groupName
-            ));
-        }
-        return ResponseEntity.notFound().build();
+        GroupMemberResponseDTO response = service.removeMember(groupId, userId);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/{groupId}/members/{userId}/setLeader")
@@ -151,17 +136,8 @@ public class GroupController {
             return validation;
         }
 
-        Optional<GroupUser> groupUserOpt= service.modifyLeader(groupId, userId, isLeader);
-        
-        if (groupUserOpt.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(Map.of("error", "El usuario no forma parte del grupo"));
-
-        }                
-        return ResponseEntity.ok(Map.of(
-            "mensaje", "El usuario fue " + (isLeader ? "asignado como lider" : "removido como lider")));
-        
-         
+        GroupMemberResponseDTO response = service.modifyLeader(groupId, userId, isLeader);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/{groupId}/events/{eventId}")
@@ -173,11 +149,19 @@ public class GroupController {
             return validation;
         }
 
-        Optional<String> errorResult = service.addEventToGroup(groupId, eventId);
-        if (errorResult.isPresent()) {
-            return ResponseEntity.badRequest().body(Map.of("error", errorResult.get()));
-        }
-        return ResponseEntity.ok(Map.of("mensaje", "Evento agregado al grupo correctamente"));
+        GroupEventResponseDTO response = service.addEventToGroup(groupId, eventId);
+        return ResponseEntity.ok(response);
     }
-    
+
+    @DeleteMapping("/{groupId}/events/{eventId}")
+    public ResponseEntity<?> removeEvent(@PathVariable int groupId, @PathVariable int eventId) {
+        // Validacion si es lider o admin, llamamos a la clase authLeaderAdmin para validar
+        ResponseEntity<?> validation = authLeaderAdmin.validationAdminOrLeader(groupId);
+        if (validation != null) {
+            return validation;
+        }
+
+        GroupEventResponseDTO response = service.removeEventFromGroup(groupId, eventId);
+        return ResponseEntity.ok(response);
+    }
 }

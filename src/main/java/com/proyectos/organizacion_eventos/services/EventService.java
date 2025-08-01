@@ -26,9 +26,9 @@ public interface EventService {
 
     EventMemberResponseDTO removeMember(int eventId, int userId);
 
-    Optional<EventDTO> getParticipationForEventDTO(int id, boolean attendance);
+    EventDTO getParticipationForEventDTO(int id, boolean attendance);
 
     Boolean isOrganizer(int eventId, String username);
 
-    Optional<Event> update (EventUpdateDTO event, int id);
+    EventDTO update (EventUpdateDTO event, int id);
 }

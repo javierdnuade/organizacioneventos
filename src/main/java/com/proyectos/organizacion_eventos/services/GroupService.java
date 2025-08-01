@@ -4,8 +4,9 @@ import java.util.List;
 import java.util.Optional;
 
 import com.proyectos.organizacion_eventos.dto.GroupDTO;
+import com.proyectos.organizacion_eventos.dto.GroupEventResponseDTO;
+import com.proyectos.organizacion_eventos.dto.GroupMemberResponseDTO;
 import com.proyectos.organizacion_eventos.entities.Group;
-import com.proyectos.organizacion_eventos.entities.GroupUser;
 
 public interface GroupService {
 
@@ -17,15 +18,17 @@ public interface GroupService {
 
     Optional<GroupDTO> getGroupDTO(int id);
 
-    Optional<Group> delete(int id);
+    GroupDTO delete(int id);
 
-    void addMember(int grupoId, int userId, boolean isLeader);
+    GroupMemberResponseDTO addMember(int grupoId, int userId, boolean isLeader);
 
-    Optional<GroupUser> removeMember(int groupId, int userId);
+    GroupMemberResponseDTO removeMember(int groupId, int userId);
 
     boolean isLeader(int groupId, String username);
 
-    Optional<GroupUser> modifyLeader(int groupId, int userId, boolean leader);
+    GroupMemberResponseDTO modifyLeader(int groupId, int userId, boolean leader);
 
-    Optional<String> addEventToGroup(int groupId, int eventId);
+    GroupEventResponseDTO addEventToGroup(int groupId, int eventId);
+
+    GroupEventResponseDTO removeEventFromGroup(int groupId, int eventId);
 }

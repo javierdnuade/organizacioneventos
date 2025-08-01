@@ -1,7 +1,6 @@
 package com.proyectos.organizacion_eventos.controllers;
 
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -131,9 +130,8 @@ public class EventController {
             return validation;
         }
 
-        return service.getParticipationForEventDTO(id, attended)
-        .map(ResponseEntity::ok)
-        .orElse(ResponseEntity.notFound().build()); 
+        EventDTO dto = service.getParticipationForEventDTO(id, attended);
+        return ResponseEntity.ok(dto);
 
     }
 
@@ -152,23 +150,8 @@ public class EventController {
             return errors;
         }
 
-        Optional<Event> eventOpt = service.update(eventUpdate, id);
-        if (eventOpt.isPresent()) {
-            Event updatedEvent = eventOpt.get();
-            EventDTO dto = EventDTO.builder()
-                .id(updatedEvent.getId())
-                .name(updatedEvent.getName())
-                .description(updatedEvent.getDescription())
-                .date(updatedEvent.getDate())
-                .location(updatedEvent.getLocation())
-                .status(updatedEvent.getStatus().getDescription())
-                .organizer(updatedEvent.getOrganizer() != null ? updatedEvent.getOrganizer().getName() : null)
-                .attendance(List.of())
-            .build();
-            return ResponseEntity.ok(dto);
-        }
-
-        return ResponseEntity.notFound().build();
+        EventDTO dto = service.update(eventUpdate, id);
+        return ResponseEntity.ok(dto);
     }
     
 }
