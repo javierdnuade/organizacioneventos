@@ -31,7 +31,7 @@ public class AuthUtilForGroup {
 
         if (!admin && !leader) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                .body(Map.of("error", "Solo un lider o admin pueden borrar miembros de un grupo"));
+                .body(Map.of("error", "Solo un lider o admin pueden hacer cambios en un grupo"));
         }    
         return null;
     }

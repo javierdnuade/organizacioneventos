@@ -3,7 +3,6 @@ package com.proyectos.organizacion_eventos.controllers;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -14,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.proyectos.organizacion_eventos.dto.EventFeedbackDTO;
+import com.proyectos.organizacion_eventos.dto.EventMemberFeedbackResponseDTO;
 import com.proyectos.organizacion_eventos.dto.FeedbackRequestDTO;
 import com.proyectos.organizacion_eventos.entities.User;
 import com.proyectos.organizacion_eventos.services.FeedbackEventService;
@@ -47,12 +47,9 @@ public class FeedbackEventController {
         Optional<User> userOpt = userService.findByUsername(currentUsername);
         User user = userOpt.get();
 
-        try {
-            service.addFeedback(eventId, user.getId(), textFeedbackUser.getFeedback());
-            return ResponseEntity.ok("Feedback agregado correctamente");
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-        }
+        EventMemberFeedbackResponseDTO response = service.addFeedback(eventId, user.getId(), textFeedbackUser.getFeedback());
+        return ResponseEntity.ok(response);
+
     }
 
     @GetMapping("{eventId}")

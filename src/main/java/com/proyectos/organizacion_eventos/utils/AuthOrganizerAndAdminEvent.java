@@ -32,7 +32,7 @@ public class AuthOrganizerAndAdminEvent {
 
         if (!admin && (!organizer || organizer == null)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                .body(Map.of("error", "Solo el organizador o admin puede modificar el evento"));
+                .body(Map.of("error", "Solo el organizador o admin pueden hacer cambios en el evento"));
         }    
         return null;
     }

@@ -1,7 +1,9 @@
 package com.proyectos.organizacion_eventos.services;
 
+import com.proyectos.organizacion_eventos.dto.EventAttendanceResponseDTO;
+
 public interface EventAttendanceService {
 
-    void setAttendance(int eventId, int userId, boolean attenden);
+    EventAttendanceResponseDTO setAttendance(int eventId, int userId, boolean attenden);
 
 }
