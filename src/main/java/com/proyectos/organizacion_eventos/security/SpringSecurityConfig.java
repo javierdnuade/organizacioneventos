@@ -45,6 +45,12 @@ public class SpringSecurityConfig {
             .csrf(csrf -> csrf.disable()) // Deshabilita CSRF (Cross-Site Request Forgery) para simplificar la configuración
             .cors(cors -> cors.disable()) // Deshabilita CORS (Cross-Origin Resource Sharing) para simplificar la configuración
             .authorizeHttpRequests(auth -> auth
+                // ⬇️ Swagger sin autenticación
+                .requestMatchers(
+                    "/swagger-ui.html",
+                    "/swagger-ui/**",
+                    "/v3/api-docs/**",
+                    "/v3/api-docs.yaml").permitAll()
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/events/**").hasAnyRole("USER", "ADMIN")
                 .requestMatchers(HttpMethod.GET, "/api/groups/**").hasAnyRole("USER", "ADMIN")

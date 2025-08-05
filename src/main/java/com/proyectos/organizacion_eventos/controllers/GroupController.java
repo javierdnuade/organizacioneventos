@@ -109,59 +109,59 @@ public class GroupController {
             ));
     }
 
-    @DeleteMapping("/{groupId}/members/{userId}")
+    @DeleteMapping("/{id}/members/{userId}")
     public ResponseEntity<?> deleteMember (
-            @PathVariable int groupId,
+            @PathVariable int id,
             @PathVariable int userId) {
 
         // Validacion si es lider o admin, llamamos a la clase authLeaderAdmin para validar
-        ResponseEntity<?> validation = authLeaderAdmin.validationAdminOrLeader(groupId);
+        ResponseEntity<?> validation = authLeaderAdmin.validationAdminOrLeader(id);
         if (validation != null) {
             return validation;
         }
 
-        GroupMemberResponseDTO response = service.removeMember(groupId, userId);
+        GroupMemberResponseDTO response = service.removeMember(id, userId);
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/{groupId}/members/{userId}/setLeader")
+    @PostMapping("/{id}/members/{userId}/setLeader")
     public ResponseEntity<?> setLeader(
-            @PathVariable int groupId,
+            @PathVariable int id,
             @PathVariable int userId,
             @RequestParam boolean isLeader) {
 
         // Validacion si es lider o admin, llamamos a la clase authLeaderAdmin para validar
-        ResponseEntity<?> validation = authLeaderAdmin.validationAdminOrLeader(groupId);
+        ResponseEntity<?> validation = authLeaderAdmin.validationAdminOrLeader(id);
         if (validation != null) {
             return validation;
         }
 
-        GroupMemberResponseDTO response = service.modifyLeader(groupId, userId, isLeader);
+        GroupMemberResponseDTO response = service.modifyLeader(id, userId, isLeader);
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/{groupId}/events/{eventId}")
-    public ResponseEntity<?> addEvent(@PathVariable int groupId, @PathVariable int eventId) {
+    @PostMapping("/{id}/events/{eventId}")
+    public ResponseEntity<?> addEvent(@PathVariable int id, @PathVariable int eventId) {
         
         // Validacion si es lider o admin, llamamos a la clase authLeaderAdmin para validar
-        ResponseEntity<?> validation = authLeaderAdmin.validationAdminOrLeader(groupId);
+        ResponseEntity<?> validation = authLeaderAdmin.validationAdminOrLeader(id);
         if (validation != null) {
             return validation;
         }
 
-        GroupEventResponseDTO response = service.addEventToGroup(groupId, eventId);
+        GroupEventResponseDTO response = service.addEventToGroup(id, eventId);
         return ResponseEntity.ok(response);
     }
 
-    @DeleteMapping("/{groupId}/events/{eventId}")
-    public ResponseEntity<?> removeEvent(@PathVariable int groupId, @PathVariable int eventId) {
+    @DeleteMapping("/{id}/events/{eventId}")
+    public ResponseEntity<?> removeEvent(@PathVariable int id, @PathVariable int eventId) {
         // Validacion si es lider o admin, llamamos a la clase authLeaderAdmin para validar
-        ResponseEntity<?> validation = authLeaderAdmin.validationAdminOrLeader(groupId);
+        ResponseEntity<?> validation = authLeaderAdmin.validationAdminOrLeader(id);
         if (validation != null) {
             return validation;
         }
 
-        GroupEventResponseDTO response = service.removeEventFromGroup(groupId, eventId);
+        GroupEventResponseDTO response = service.removeEventFromGroup(id, eventId);
         return ResponseEntity.ok(response);
     }
 }
